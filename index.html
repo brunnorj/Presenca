@@ -66,11 +66,26 @@
             background-color: #0ea5e9;
             transform: translateY(-2px);
         }
+        /* NOVOS ESTILOS PARA LISTA DE ESPERA */
+        .slot-waiting, .slot-waiting-mine {
+            background-color: #f97316; /* Laranja */
+            color: white;
+            border: 2px solid white;
+        }
+        .slot-waiting-mine {
+            cursor: pointer;
+            font-weight: 900;
+        }
+        .slot-waiting-mine:hover {
+            background-color: #ea580c;
+            transform: translateY(-2px);
+        }
 
         .admin-view .slot-taken,
         .admin-view .slot-mine,
         .admin-view .slot-guest,
-        .admin-view .slot-guest-mine {
+        .admin-view .slot-guest-mine,
+        .admin-view .slot-waiting { /* Adicionado */
             cursor: pointer;
         }
         .admin-view .slot-taken:hover,
@@ -80,6 +95,12 @@
             background-color: #dc2626;
             transform: translateY(-2px);
         }
+        /* Adicionado hover para admin na lista de espera */
+        .admin-view .slot-waiting:hover {
+            background-color: #0891b2; /* Ciano para indicar 'mover' */
+            transform: translateY(-2px);
+        }
+
         .slot-paused {
             background-color: #6b7280;
             cursor: not-allowed;
@@ -177,8 +198,9 @@
                     <div id="admin-controls" class="flex flex-wrap justify-center gap-4 mt-2">
                         <button id="pause-date-button" class="px-4 py-2 font-bold bg-yellow-600 rounded-lg hover:bg-yellow-700 transition-colors">Pausar Marcações</button>
                         <button id="delete-presences-button" class="px-4 py-2 font-bold bg-red-800 rounded-lg hover:bg-red-900 transition-colors">Excluir Presenças</button>
-                        <!-- BOTÃO RELATÓRIO ADICIONADO -->
                         <button id="generate-report-button" class="px-4 py-2 font-bold bg-green-600 rounded-lg hover:bg-green-700 transition-colors">Gerar Relatório</button>
+                        <!-- BOTÃO LISTA DE ESPERA ADICIONADO -->
+                        <button id="toggle-waiting-list-button" class="px-4 py-2 font-bold bg-orange-600 rounded-lg hover:bg-orange-700 transition-colors">Lista de Espera</button>
                     </div>
                 </div>
 
@@ -188,6 +210,13 @@
                      <h3 id="selected-date-title" class="text-4xl font-brand text-amber-400 text-center mb-6"></h3>
                      <div id="presence-slots" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 bg-gray-800 bg-opacity-50 rounded-2xl p-6 border border-gray-700"></div>
                 </div>
+                
+                <!-- NOVO: Container da Lista de Espera -->
+                <div id="waiting-list-container" class="hidden mt-12">
+                    <h3 class="text-4xl font-brand text-orange-400 text-center mb-6">LISTA DE ESPERA</h3>
+                    <div id="waiting-slots" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 bg-gray-800 bg-opacity-50 rounded-2xl p-6 border border-gray-700"></div>
+                </div>
+
             </div>
 
             <!-- Outras Abas (sem alterações de lógica) -->
@@ -240,6 +269,23 @@
     <div id="edit-user-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl p-8 w-full max-w-md space-y-4 border border-gray-600"><h2 id="edit-user-title" class="text-3xl font-brand text-amber-400">Editar Jogador</h2><form id="edit-user-form" class="space-y-4"><div><label for="edit-password" class="text-xl text-gray-300">Nova Senha (deixe em branco)</label><input type="password" id="edit-password" name="edit-password" class="mt-2 w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white"></div><div><label for="edit-user-role" class="text-xl text-gray-300">Perfil</label><select id="edit-user-role" name="edit-user-role" class="mt-2 w-full px-4 py-3 bg-gray-700 rounded-lg text-white"><option value="padrão">Padrão</option><option value="administrador">Administrador</option></select></div><div class="flex gap-4 pt-4"><button type="submit" class="w-full py-3 font-bold bg-blue-600 hover:bg-blue-700 rounded-lg">GUARDAR</button><button type="button" id="cancel-edit-user-button" class="w-full py-3 font-bold bg-gray-600 rounded-lg">CANCELAR</button></div></form></div></div>
     <div id="change-password-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl p-8 w-full max-w-md space-y-4 border border-gray-600"><h2 class="text-3xl font-brand text-amber-400 text-center">Alterar Senha</h2><form id="change-password-form" class="space-y-4"><div><label for="current-password" class="text-xl text-gray-300">Senha Atual</label><input type="password" id="current-password" name="current-password" class="mt-2 w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white" required></div><div><label for="new-user-password" class="text-xl text-gray-300">Nova Senha</label><input type="password" id="new-user-password" name="new-user-password" class="mt-2 w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white" required></div><div><label for="confirm-new-password" class="text-xl text-gray-300">Confirmar Nova Senha</label><input type="password" id="confirm-new-password" name="confirm-new-password" class="mt-2 w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white" required></div><div class="flex gap-4 pt-4"><button type="submit" class="w-full py-3 font-bold bg-amber-400 text-gray-900 hover:bg-amber-500 rounded-lg">GUARDAR ALTERAÇÕES</button><button type="button" id="cancel-change-password-button" class="w-full py-3 font-bold bg-gray-600 rounded-lg">CANCELAR</button></div></form></div></div>
     <div id="guest-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl p-8 w-full max-w-md space-y-4 border border-gray-600"><h2 class="text-3xl font-brand text-sky-400 text-center">Adicionar Convidado</h2><form id="guest-form" class="space-y-4"><div><label for="guest-name" class="text-xl text-gray-300">Nome do Convidado</label><input type="text" id="guest-name" name="guest-name" class="mt-2 w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white" required></div><div class="flex gap-4 pt-4"><button type="submit" class="w-full py-3 font-bold bg-sky-500 hover:bg-sky-600 rounded-lg">CONFIRMAR CONVIDADO</button><button type="button" id="cancel-guest-button" class="w-full py-3 font-bold bg-gray-600 rounded-lg">CANCELAR</button></div></form></div></div>
+    
+    <!-- NOVO: Modal para Mover Jogador da Lista de Espera -->
+    <div id="move-player-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4">
+        <div class="bg-gray-800 rounded-2xl p-8 w-full max-w-md space-y-4 border border-gray-600">
+            <h2 id="move-player-title" class="text-3xl font-brand text-cyan-400 text-center">Mover Jogador</h2>
+            <p id="move-player-text" class="text-lg text-gray-200 text-center"></p>
+            <div>
+                <label for="free-slots-select" class="text-xl text-gray-300">Escolha uma vaga livre:</label>
+                <select id="free-slots-select" class="mt-2 w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white"></select>
+            </div>
+            <div class="flex gap-4 pt-4">
+                <button id="confirm-move-player-button" class="w-full py-3 font-bold bg-cyan-600 hover:bg-cyan-700 rounded-lg">MOVER</button>
+                <button type="button" id="cancel-move-player-button" class="w-full py-3 font-bold bg-gray-600 rounded-lg">CANCELAR</button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- MODAIS DE RELATÓRIO ADICIONADOS -->
     <div id="report-date-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4">
@@ -296,6 +342,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             // --- CONSTANTES E VARIÁVEIS GLOBAIS ---
             let totalSlots = 24;
+            const WAITING_LIST_SLOTS = 5;
             
             // --- ELEMENTOS DA UI ---
             const loginScreen = document.getElementById('login-screen');
@@ -372,9 +419,20 @@
             const set18SlotsButton = document.getElementById('set-18-slots-button');
             const set24SlotsButton = document.getElementById('set-24-slots-button');
             const currentSlotsDisplay = document.getElementById('current-slots-display');
+            // Elementos da Lista de Espera
+            const toggleWaitingListButton = document.getElementById('toggle-waiting-list-button');
+            const waitingListContainer = document.getElementById('waiting-list-container');
+            const waitingSlots = document.getElementById('waiting-slots');
+            const movePlayerModal = document.getElementById('move-player-modal');
+            const movePlayerTitle = document.getElementById('move-player-title');
+            const movePlayerText = document.getElementById('move-player-text');
+            const freeSlotsSelect = document.getElementById('free-slots-select');
+            const confirmMovePlayerButton = document.getElementById('confirm-move-player-button');
+            const cancelMovePlayerButton = document.getElementById('cancel-move-player-button');
 
             let currentSlotData = null; 
             let selectedPlayerForAction = null;
+            let playerToMove = null; // Novo: Para armazenar dados do jogador a ser movido
             let userToEditId = null;
             let userToDeleteId = null;
 
@@ -389,6 +447,7 @@
                 playerDateDisplay.classList.add('hidden');
                 adminDateSelector.classList.add('hidden');
                 presenceListContainer.classList.add('hidden');
+                waitingListContainer.classList.add('hidden'); // Esconde a lista de espera por defeito
                 
                 if (role === 'administrador') {
                     adminDateSelector.classList.add('flex');
@@ -398,6 +457,7 @@
                         adminControls.classList.remove('hidden');
                         pauseDateButton.textContent = isPaused ? 'Retomar Marcações' : 'Pausar Marcações';
                         renderSlotsForDate(activeDate, isPaused);
+                        renderWaitingList(activeDate, isPaused); // Renderiza a lista de espera para admin
                     } else {
                         adminControls.classList.add('hidden');
                     }
@@ -409,6 +469,8 @@
                         let statusText = isPaused ? '<span class="font-bold text-yellow-500">(Marcações Pausadas)</span>' : '';
                         playerDateDisplay.innerHTML = `<p class="text-2xl">Data ativa: <span class="font-bold text-amber-400">${formattedDate}</span> ${statusText}</p>`;
                         renderSlotsForDate(activeDate, isPaused);
+                        renderWaitingList(activeDate, isPaused); // Renderiza a lista de espera para jogador
+                        waitingListContainer.classList.remove('hidden'); // Mostra sempre para jogador se a data estiver ativa
                     } else {
                         playerDateDisplay.innerHTML = `<p class="text-2xl text-red-500 font-bold">A aguardar a libertação da data.</p>`;
                     }
@@ -710,6 +772,7 @@
                         const loggedInUser = sessionStorage.getItem('loggedInUser');
                         modalTitle.textContent = `Confirmar Vaga #${parseInt(slot) + 1}`;
                         modalConfirmText.textContent = `Confirma a presença para ${loggedInUser}?`;
+                        confirmBtn.onclick = handleConfirmPresence; // Define a função correta
                         presenceModal.classList.add('flex');
                     } else if (target.classList.contains('slot-mine') || target.classList.contains('slot-guest-mine')) {
                          unconfirmModalText.textContent = `Tem a certeza de que deseja remover a presença de ${playerName}?`;
@@ -807,6 +870,7 @@
                         });
                     }
                      presenceModal.classList.remove('flex');
+                     confirmBtn.onclick = null; // Limpa o handler
                      refreshUI();
                 } catch (error) {
                     console.error("ERRO CRÍTICO AO CONFIRMAR PRESENÇA:", error);
@@ -816,9 +880,10 @@
             
             async function handleConfirmUnmark() {
                 if (!currentSlotData || !currentSlotData.docId) return;
+                const collectionName = currentSlotData.list === 'waiting' ? 'lista_espera' : 'presencas';
 
                 try {
-                    await deleteDoc(doc(db, "presencas", currentSlotData.docId));
+                    await deleteDoc(doc(db, collectionName, currentSlotData.docId));
                     unconfirmModal.classList.remove('flex');
                     adminActionModal.classList.remove('flex');
                     refreshUI();
@@ -851,7 +916,176 @@
                     showMessage("Erro", "Não foi possível aplicar a penalidade.");
                 }
             }
-            
+
+             // --- LÓGICA DA LISTA DE ESPERA ---
+
+            async function renderWaitingList(dateString, isPaused) {
+                waitingSlots.innerHTML = '';
+                const loggedInUserId = sessionStorage.getItem('loggedInUserId');
+                const userRole = sessionStorage.getItem('userRole');
+
+                try {
+                    const playersSnapshot = await getDocs(collection(db, "jogadores"));
+                    const playersMap = new Map();
+                    playersSnapshot.forEach(doc => {
+                        playersMap.set(doc.id, doc.data().nome_exibicao);
+                    });
+
+                    const q = query(collection(db, "lista_espera"), where("data_jogo", "==", dateString));
+                    const waitingSnapshot = await getDocs(q);
+                    
+                    const waitingList = {};
+                    waitingSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        const playerName = playersMap.get(data.jogador_id);
+                        if (playerName) {
+                            waitingList[data.numero_vaga] = {
+                                playerName: playerName,
+                                playerId: data.jogador_id,
+                                docId: doc.id
+                            };
+                        }
+                    });
+
+                    if (userRole === 'administrador' && !isPaused) {
+                        waitingSlots.classList.add('admin-view');
+                    } else {
+                        waitingSlots.classList.remove('admin-view');
+                    }
+                    
+                    for (let i = 0; i < WAITING_LIST_SLOTS; i++) {
+                        const waitingData = waitingList[i];
+                        const slotEl = document.createElement('div');
+                        slotEl.dataset.slot = i;
+                        slotEl.className = 'slot p-3 rounded-lg text-center font-bold truncate';
+
+                        if (isPaused) {
+                            slotEl.classList.add('slot-paused');
+                            slotEl.textContent = waitingData ? waitingData.playerName : `Espera #${i + 1}`;
+                        } else {
+                            if (waitingData) {
+                                slotEl.textContent = waitingData.playerName;
+                                slotEl.dataset.docId = waitingData.docId;
+                                slotEl.dataset.playerName = waitingData.playerName;
+                                slotEl.dataset.playerId = waitingData.playerId;
+                                slotEl.classList.add('slot-waiting');
+                                if (waitingData.playerId === loggedInUserId) {
+                                    slotEl.classList.add('slot-waiting-mine');
+                                }
+                            } else {
+                                slotEl.textContent = `Espera #${i + 1}`;
+                                slotEl.classList.add('slot-free');
+                            }
+                            slotEl.addEventListener('click', handleWaitingSlotClick);
+                        }
+                        waitingSlots.appendChild(slotEl);
+                    }
+                } catch (error) {
+                    console.error("Erro ao renderizar lista de espera:", error);
+                }
+            }
+
+            async function handleWaitingSlotClick(event) {
+                const target = event.target.closest('.slot');
+                if (!target) return;
+
+                const userRole = sessionStorage.getItem('userRole');
+                const loggedInUserId = sessionStorage.getItem('loggedInUserId');
+                const slot = target.dataset.slot;
+                const docId = target.dataset.docId;
+                const playerName = target.dataset.playerName;
+                const playerId = target.dataset.playerId;
+
+                currentSlotData = { slot, docId, playerName, playerId, list: 'waiting' };
+                
+                if (target.classList.contains('slot-free')) {
+                    modalTitle.textContent = 'Entrar na Lista de Espera';
+                    modalConfirmText.textContent = `Deseja entrar na vaga de espera #${parseInt(slot) + 1}?`;
+                    confirmBtn.onclick = handleConfirmWaitingPresence; // Atribui a função correta
+                    presenceModal.classList.add('flex');
+                } else if (target.classList.contains('slot-waiting-mine')) {
+                    unconfirmModalText.textContent = `Deseja sair da lista de espera?`;
+                    confirmUnmarkBtn.onclick = handleConfirmUnmark;
+                    unconfirmModal.classList.add('flex');
+                } else if (userRole === 'administrador') {
+                    const freeSlots = [];
+                    document.querySelectorAll('#presence-slots .slot-free').forEach(slotNode => {
+                        freeSlots.push(slotNode.dataset.slot);
+                    });
+
+                    if (freeSlots.length === 0) {
+                        showMessage('Sem Vagas', 'Não há vagas livres na lista de presença para mover este jogador.');
+                        return;
+                    }
+
+                    playerToMove = { name: playerName, id: playerId, waitingDocId: docId };
+                    movePlayerText.textContent = `Mover ${playerName} para a lista de presença.`;
+                    freeSlotsSelect.innerHTML = freeSlots.map(s => `<option value="${s}">Vaga #${parseInt(s) + 1}</option>`).join('');
+                    movePlayerModal.classList.add('flex');
+                }
+            }
+
+            async function handleConfirmWaitingPresence() {
+                const loggedInUserId = sessionStorage.getItem('loggedInUserId');
+                try {
+                    const configDoc = await getDoc(doc(db, "configuracoes", "global"));
+                    const activeDate = configDoc.data().data_ativa;
+
+                    // Verifica se o jogador já está na lista de presença ou de espera
+                    const qPresence = query(collection(db, "presencas"), where("data_jogo", "==", activeDate), where("jogador_id", "==", loggedInUserId));
+                    const qWaiting = query(collection(db, "lista_espera"), where("data_jogo", "==", activeDate), where("jogador_id", "==", loggedInUserId));
+                    const [presenceSnapshot, waitingSnapshot] = await Promise.all([getDocs(qPresence), getDocs(qWaiting)]);
+
+                    if (!presenceSnapshot.empty || !waitingSnapshot.empty) {
+                        showMessage('Aviso', 'Já está na lista de presença ou de espera.');
+                    } else {
+                        await addDoc(collection(db, "lista_espera"), {
+                            data_jogo: activeDate,
+                            jogador_id: loggedInUserId,
+                            numero_vaga: parseInt(currentSlotData.slot)
+                        });
+                    }
+                    presenceModal.classList.remove('flex');
+                    confirmBtn.onclick = null; // Limpa o handler
+                    refreshUI();
+                } catch (error) {
+                    console.error("Erro ao entrar na lista de espera:", error);
+                    showMessage('Erro', 'Não foi possível entrar na lista de espera.');
+                }
+            }
+
+            async function handleConfirmMovePlayer() {
+                if (!playerToMove) return;
+                const targetSlot = freeSlotsSelect.value;
+
+                try {
+                    const configDoc = await getDoc(doc(db, "configuracoes", "global"));
+                    const activeDate = configDoc.data().data_ativa;
+
+                    const batch = writeBatch(db);
+                    // Remove da lista de espera
+                    const waitingRef = doc(db, "lista_espera", playerToMove.waitingDocId);
+                    batch.delete(waitingRef);
+                    // Adiciona à lista de presença
+                    const presenceRef = doc(collection(db, "presencas"));
+                    batch.set(presenceRef, {
+                        data_jogo: activeDate,
+                        jogador_id: playerToMove.id,
+                        numero_vaga: parseInt(targetSlot),
+                        tipo: 'jogador'
+                    });
+                    await batch.commit();
+
+                    showMessage('Sucesso', `${playerToMove.name} foi movido para a lista de presença.`);
+                    movePlayerModal.classList.remove('flex');
+                    playerToMove = null;
+                    refreshUI();
+                } catch(error) {
+                    console.error("Erro ao mover jogador:", error);
+                    showMessage('Erro', 'Não foi possível mover o jogador.');
+                }
+            }
+
             // --- LÓGICA DE RELATÓRIO ---
             async function handleGenerateReport(e) {
                 e.preventDefault();
@@ -1137,8 +1371,11 @@
                 cancelGuestButton.addEventListener('click', () => guestModal.classList.remove('flex'));
                 guestForm.addEventListener('submit', handleGuestSubmit);
 
-                cancelBtn.addEventListener('click', () => presenceModal.classList.remove('flex'));
-                confirmBtn.addEventListener('click', handleConfirmPresence);
+                cancelBtn.addEventListener('click', () => {
+                    presenceModal.classList.remove('flex');
+                    confirmBtn.onclick = null; // Limpa o handler para evitar execuções acidentais
+                });
+                
                 cancelUnmarkBtn.addEventListener('click', () => unconfirmModal.classList.remove('flex'));
                 confirmUnmarkBtn.addEventListener('click', handleConfirmUnmark);
                 
@@ -1149,8 +1386,8 @@
                 });
                 adminActionPenaltyBtn.addEventListener('click', () => {
                     adminActionModal.classList.remove('flex');
-                     if(selectedPlayerForAction.type === 'convidado') {
-                         showMessage('Aviso', 'Não é possível aplicar penalidade a um convidado.');
+                     if(currentSlotData.list === 'waiting' || selectedPlayerForAction.type === 'convidado') {
+                         showMessage('Aviso', 'Ação não permitida para este jogador.');
                          return;
                      }
                     penaltyText.textContent = `Escolha a duração da penalidade para ${selectedPlayerForAction.name}.`;
@@ -1160,6 +1397,11 @@
                 document.querySelectorAll('.penalty-duration-button').forEach(button => {
                     button.addEventListener('click', (e) => handlePenalty(parseInt(e.target.dataset.penalty)));
                 });
+                
+                // Event Listeners da Lista de Espera
+                toggleWaitingListButton.addEventListener('click', () => waitingListContainer.classList.toggle('hidden'));
+                cancelMovePlayerButton.addEventListener('click', () => movePlayerModal.classList.remove('flex'));
+                confirmMovePlayerButton.addEventListener('click', handleConfirmMovePlayer);
 
                 // ATUALIZADO: Event listener para a lista de utilizadores
                 userList.addEventListener('click', (e) => {
@@ -1231,13 +1473,18 @@
                             deletePresencesModal.classList.remove('flex');
                             return;
                         }
-                        const q = query(collection(db, "presencas"), where("data_jogo", "==", activeDate));
-                        const snapshot = await getDocs(q);
+                        // Deleta presenças e lista de espera
+                        const qPresences = query(collection(db, "presencas"), where("data_jogo", "==", activeDate));
+                        const qWaiting = query(collection(db, "lista_espera"), where("data_jogo", "==", activeDate));
+                        const [presencesSnapshot, waitingSnapshot] = await Promise.all([getDocs(qPresences), getDocs(qWaiting)]);
+                        
                         const batch = writeBatch(db);
-                        snapshot.docs.forEach(d => batch.delete(d.ref));
+                        presencesSnapshot.docs.forEach(d => batch.delete(d.ref));
+                        waitingSnapshot.docs.forEach(d => batch.delete(d.ref));
                         await batch.commit();
+
                         await setDoc(configDocRef, { data_ativa: null }, { merge: true });
-                        showMessage('Sucesso', 'Presenças removidas e data desativada.');
+                        showMessage('Sucesso', 'Presenças e lista de espera removidas. Data desativada.');
                         deletePresencesModal.classList.remove('flex');
                         refreshUI();
                     } catch(error) {
@@ -1259,4 +1506,5 @@
     </script>
 </body>
 </html>
+
 
