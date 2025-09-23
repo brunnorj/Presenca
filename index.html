@@ -168,6 +168,12 @@
                 <div id="admin-date-selector" class="hidden flex-col items-center gap-4 mb-8">
                     <label for="presence-date" class="text-2xl font-bold">Ativar data para marcação:</label>
                     <input type="date" id="presence-date" class="bg-gray-700 border border-gray-600 rounded-lg p-3 text-white text-xl focus:outline-none focus:ring-2 focus:ring-amber-400">
+                    <div class="flex items-center gap-4 mt-4">
+                        <label class="text-xl font-bold">Definir Vagas:</label>
+                        <button id="set-18-slots-button" class="px-4 py-2 font-bold bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">18 Vagas</button>
+                        <button id="set-24-slots-button" class="px-4 py-2 font-bold bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors">24 Vagas</button>
+                        <span id="current-slots-display" class="text-lg text-gray-300"></span>
+                    </div>
                     <div id="admin-controls" class="flex flex-wrap justify-center gap-4 mt-2">
                         <button id="pause-date-button" class="px-4 py-2 font-bold bg-yellow-600 rounded-lg hover:bg-yellow-700 transition-colors">Pausar Marcações</button>
                         <button id="delete-presences-button" class="px-4 py-2 font-bold bg-red-800 rounded-lg hover:bg-red-900 transition-colors">Excluir Presenças</button>
@@ -289,7 +295,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             // --- CONSTANTES E VARIÁVEIS GLOBAIS ---
-            const TOTAL_SLOTS = 24;
+            let totalSlots = 24;
             
             // --- ELEMENTOS DA UI ---
             const loginScreen = document.getElementById('login-screen');
@@ -363,6 +369,9 @@
             const reportContent = document.getElementById('report-content');
             const downloadReportButton = document.getElementById('download-report-button');
             const closeReportDisplayButton = document.getElementById('close-report-display-button');
+            const set18SlotsButton = document.getElementById('set-18-slots-button');
+            const set24SlotsButton = document.getElementById('set-24-slots-button');
+            const currentSlotsDisplay = document.getElementById('current-slots-display');
 
             let currentSlotData = null; 
             let selectedPlayerForAction = null;
@@ -409,13 +418,16 @@
             async function refreshUI() {
                 try {
                     const configDoc = await getDoc(doc(db, "configuracoes", "global"));
-                    const settings = configDoc.exists() ? configDoc.data() : { data_ativa: null, marcacoes_pausadas: false };
+                    const settings = configDoc.exists() ? configDoc.data() : { data_ativa: null, marcacoes_pausadas: false, numero_vagas: 24 };
                     
+                    totalSlots = settings.numero_vagas || 24;
+
                     const userRole = sessionStorage.getItem('userRole');
                     if (userRole) {
                         updatePresenceViewForRole(userRole, settings.data_ativa, settings.marcacoes_pausadas);
                     }
                     if(userRole === 'administrador') {
+                        currentSlotsDisplay.textContent = `(Ativas: ${totalSlots})`;
                         renderUserList();
                     }
                 } catch (error) {
@@ -441,6 +453,11 @@
                         const penaltyInfo = user.penalidade_ate ? `<p class="text-xs text-red-400">Penalizado até ${new Date(user.penalidade_ate + 'T00:00:00').toLocaleDateString('pt-BR')}</p>` : '';
                         const removePenaltyButton = user.penalidade_ate ? `<button data-userid="${user.id}" class="remove-penalty-btn bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-sm">Remover Penalidade</button>` : '';
                         
+                        // NOVO: Lógica para bloqueio de inatividade
+                        const isBlocked = user.bloqueado_inatividade === true;
+                        const blockedInfo = isBlocked ? `<p class="text-xs text-red-500 font-bold">LOGIN BLOQUEADO</p>` : '';
+                        const unblockButton = isBlocked ? `<button data-userid="${user.id}" class="unblock-user-btn bg-teal-500 hover:bg-teal-600 text-white font-bold py-1 px-3 rounded text-sm">Desbloquear</button>` : '';
+
                         const userEl = document.createElement('div');
                         userEl.className = 'flex items-center justify-between bg-gray-700 p-3 rounded-lg';
                         userEl.innerHTML = `
@@ -448,8 +465,10 @@
                                 <p class="font-bold text-white text-lg">${user.nome_exibicao}</p>
                                 <p class="text-sm text-amber-400 capitalize">${user.perfil}</p>
                                 ${penaltyInfo}
+                                ${blockedInfo}
                             </div>
                             <div class="flex flex-col sm:flex-row gap-2 items-end">
+                                ${unblockButton}
                                 ${removePenaltyButton}
                                 <button data-userid="${user.id}" data-username="${user.nome_exibicao}" data-userrole="${user.perfil}" class="edit-user-btn bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded text-sm">Editar</button>
                                 <button data-userid="${user.id}" data-username="${user.nome_exibicao}" class="delete-user-btn bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded text-sm">Excluir</button>
@@ -466,6 +485,22 @@
                 } catch (error) {
                     console.error("Erro ao renderizar a lista de utilizadores: ", error);
                     userList.innerHTML = '<p class="text-center text-red-500">Falha ao carregar jogadores.</p>';
+                }
+            }
+
+            // NOVO: Função para desbloquear usuário
+            async function handleUnblockUser(userId) {
+                try {
+                    const userRef = doc(db, "jogadores", userId);
+                    await updateDoc(userRef, {
+                        bloqueado_inatividade: false,
+                        ultimo_login: new Date().toISOString().split('T')[0] // Reseta a contagem de inatividade
+                    });
+                    showMessage('Sucesso', 'O jogador foi desbloqueado.');
+                    renderUserList();
+                } catch (error) {
+                    console.error("Erro ao desbloquear utilizador: ", error);
+                    showMessage("Erro", "Não foi possível desbloquear o jogador.");
                 }
             }
             
@@ -606,7 +641,7 @@
                     }
 
                     let userHasPresence = false;
-                    for (let i = 0; i < TOTAL_SLOTS; i++) {
+                    for (let i = 0; i < totalSlots; i++) {
                         const presenceData = presences[i];
                         const slotEl = document.createElement('div');
                         slotEl.dataset.slot = i;
@@ -689,6 +724,18 @@
                 }
             }
             
+            // NOVO: Função para definir o número de vagas
+            async function setTotalSlots(count) {
+                try {
+                    await setDoc(doc(db, "configuracoes", "global"), { numero_vagas: count }, { merge: true });
+                    showMessage('Sucesso', `O número de vagas foi definido para ${count}.`);
+                    refreshUI();
+                } catch (error) {
+                    console.error("Erro ao definir número de vagas: ", error);
+                    showMessage("Erro", "Não foi possível alterar o número de vagas.");
+                }
+            }
+
             async function handleGuestSubmit(e) {
                 e.preventDefault();
                 const guestName = guestForm['guest-name'].value.trim();
@@ -904,6 +951,7 @@
                 });
             }
             
+            // ATUALIZADO: Lógica de Login com verificação de inatividade
             async function handleLogin(event) {
                 event.preventDefault();
                 const loginErrorEl = document.getElementById('login-error');
@@ -914,42 +962,81 @@
                 const normalizedUsername = usernameInput.toLowerCase().replace(/\s+/g, '');
                 
                 try {
-                    const q = query(collection(db, "jogadores"), where("nome_usuario", "==", normalizedUsername), where("senha", "==", password));
+                    // 1. Procura o utilizador pelo nome
+                    const q = query(collection(db, "jogadores"), where("nome_usuario", "==", normalizedUsername));
                     const querySnapshot = await getDocs(q);
 
+                    // 2. Se não encontrar, mostra erro
                     if (querySnapshot.empty) {
                         loginErrorEl.textContent = 'Utilizador ou senha inválidos.';
                         loginErrorEl.classList.remove('hidden');
-                    } else {
-                        const userDoc = querySnapshot.docs[0];
-                        const userData = userDoc.data();
-                        
-                        if (userData.penalidade_ate) {
-                            const today = new Date();
-                            today.setHours(0, 0, 0, 0);
-                            const penaltyDate = new Date(userData.penalidade_ate + 'T00:00:00');
-                            
-                            if (today <= penaltyDate) {
-                                const formattedDate = penaltyDate.toLocaleDateString('pt-BR');
-                                loginErrorEl.textContent = `Está penalizado até ${formattedDate}.`;
-                                loginErrorEl.classList.remove('hidden');
-                                return;
-                            }
-                        }
-
-                        sessionStorage.setItem('loggedInUserId', userDoc.id);
-                        sessionStorage.setItem('loggedInUser', userData.nome_exibicao);
-                        sessionStorage.setItem('userRole', userData.perfil);
-                        
-                        showApp(userData.nome_exibicao, userData.perfil);
-                        refreshUI();
+                        return;
                     }
+                    
+                    const userDoc = querySnapshot.docs[0];
+                    const userData = userDoc.data();
+
+                    // 3. Verifica se o login já está bloqueado por inatividade
+                    if (userData.bloqueado_inatividade) {
+                        loginErrorEl.textContent = 'Login bloqueado por inatividade.';
+                        loginErrorEl.classList.remove('hidden');
+                        return;
+                    }
+                    
+                    // 4. Verifica a senha
+                    if (userData.senha !== password) {
+                        loginErrorEl.textContent = 'Utilizador ou senha inválidos.';
+                        loginErrorEl.classList.remove('hidden');
+                        return;
+                    }
+                    
+                    // 5. Verifica se está penalizado
+                    if (userData.penalidade_ate) {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const penaltyDate = new Date(userData.penalidade_ate + 'T00:00:00');
+                        if (today <= penaltyDate) {
+                            const formattedDate = penaltyDate.toLocaleDateString('pt-BR');
+                            loginErrorEl.textContent = `Está penalizado até ${formattedDate}.`;
+                            loginErrorEl.classList.remove('hidden');
+                            return;
+                        }
+                    }
+                    
+                    // 6. Verifica a inatividade para utilizadores padrão
+                    if (userData.perfil === 'padrão' && userData.ultimo_login) {
+                        const lastLoginDate = new Date(userData.ultimo_login);
+                        const today = new Date();
+                        const diffDays = Math.floor((today - lastLoginDate) / (1000 * 60 * 60 * 24));
+                        
+                        if (diffDays > 14) {
+                            // Bloqueia o utilizador e impede o login
+                            await updateDoc(doc(db, "jogadores", userDoc.id), { bloqueado_inatividade: true });
+                            loginErrorEl.textContent = 'Login bloqueado por inatividade.';
+                            loginErrorEl.classList.remove('hidden');
+                            return;
+                        }
+                    }
+
+                    // 7. Sucesso! Atualiza a data do último login
+                    await updateDoc(doc(db, "jogadores", userDoc.id), { 
+                        ultimo_login: new Date().toISOString().split('T')[0]
+                    });
+
+                    sessionStorage.setItem('loggedInUserId', userDoc.id);
+                    sessionStorage.setItem('loggedInUser', userData.nome_exibicao);
+                    sessionStorage.setItem('userRole', userData.perfil);
+                    
+                    showApp(userData.nome_exibicao, userData.perfil);
+                    refreshUI();
+
                 } catch (error) {
                     console.error("ERRO CRÍTICO DURANTE O LOGIN:", error);
                     loginErrorEl.textContent = 'Erro de conexão. Tente novamente.';
                     loginErrorEl.classList.remove('hidden');
                 }
             }
+
 
             function handleLogout() {
                 sessionStorage.clear();
@@ -960,6 +1047,7 @@
                 document.querySelector('.tab-button[data-tab="presenca"]').click();
             }
             
+            // ATUALIZADO: Lógica de Registo para incluir novos campos
             async function handleRegistration(event) {
                 event.preventDefault();
                 const registrationMessage = document.getElementById('registration-message');
@@ -988,7 +1076,9 @@
                             nome_usuario: normalizedUsername,
                             senha: newPassword,
                             perfil: role,
-                            penalidade_ate: null
+                            penalidade_ate: null,
+                            ultimo_login: new Date().toISOString().split('T')[0], // Novo campo
+                            bloqueado_inatividade: false // Novo campo
                         });
                         registrationMessage.textContent = "Jogador cadastrado!";
                         registrationMessage.className = "text-center text-lg text-green-500";
@@ -1032,6 +1122,10 @@
                 confirmDeleteUserBtn.addEventListener('click', handleConfirmDeleteUser);
                 messageOkButton.addEventListener('click', () => messageModal.classList.remove('flex'));
                 
+                // NOVO: Listeners para os botões de vagas
+                set18SlotsButton.addEventListener('click', () => setTotalSlots(18));
+                set24SlotsButton.addEventListener('click', () => setTotalSlots(24));
+                
                 changePasswordButton.addEventListener('click', () => {
                     changePasswordForm.reset();
                     changePasswordModal.classList.add('flex');
@@ -1066,6 +1160,8 @@
                 document.querySelectorAll('.penalty-duration-button').forEach(button => {
                     button.addEventListener('click', (e) => handlePenalty(parseInt(e.target.dataset.penalty)));
                 });
+
+                // ATUALIZADO: Event listener para a lista de utilizadores
                 userList.addEventListener('click', (e) => {
                     const target = e.target;
                     if (target.classList.contains('edit-user-btn')) {
@@ -1082,6 +1178,10 @@
                     }
                     if (target.classList.contains('remove-penalty-btn')) {
                         handleRemovePenalty(target.dataset.userid);
+                    }
+                    // NOVO: Adiciona o evento para o botão de desbloquear
+                    if (target.classList.contains('unblock-user-btn')) {
+                        handleUnblockUser(target.dataset.userid);
                     }
                 });
                 cancelEditUserBtn.addEventListener('click', () => editUserModal.classList.remove('flex'));
@@ -1159,3 +1259,4 @@
     </script>
 </body>
 </html>
+
