@@ -225,8 +225,7 @@
                         <button id="pause-date-button" class="px-4 py-2 font-bold bg-yellow-600 rounded-lg hover:bg-yellow-700 transition-colors">Pausar Marcações</button>
                         <button id="delete-presences-button" class="px-4 py-2 font-bold bg-red-800 rounded-lg hover:bg-red-900 transition-colors">Excluir Presenças</button>
                         <button id="generate-report-button" class="px-4 py-2 font-bold bg-green-600 rounded-lg hover:bg-green-700 transition-colors">Gerar Relatório</button>
-                        <!-- BOTÃO LISTA DE ESPERA ADICIONADO -->
-                        <button id="toggle-waiting-list-button" class="px-4 py-2 font-bold bg-orange-600 rounded-lg hover:bg-orange-700 transition-colors">Lista de Espera</button>
+                        <button id="toggle-waiting-list-button" class="px-4 py-2 font-bold bg-orange-600 rounded-lg hover:bg-orange-700 transition-colors">Ativar Lista de Espera</button>
                     </div>
                 </div>
 
@@ -580,7 +579,7 @@
                 messageModal.classList.add('flex');
             }
             
-            function updatePresenceViewForRole(role, activeDate, isPaused) {
+            function updatePresenceViewForRole(role, activeDate, isPaused, isWaitingListActive) {
                 playerDateDisplay.classList.add('hidden');
                 adminDateSelector.classList.add('hidden');
                 presenceListContainer.classList.add('hidden');
@@ -594,7 +593,10 @@
                         adminControls.classList.remove('hidden');
                         pauseDateButton.textContent = isPaused ? 'Retomar Marcações' : 'Pausar Marcações';
                         renderSlotsForDate(activeDate, isPaused);
-                        renderWaitingList(activeDate, isPaused); // Renderiza a lista de espera para admin
+                        if (isWaitingListActive) {
+                            renderWaitingList(activeDate, isPaused);
+                            waitingListContainer.classList.remove('hidden');
+                        }
                     } else {
                         adminControls.classList.add('hidden');
                     }
@@ -606,8 +608,10 @@
                         let statusText = isPaused ? '<span class="font-bold text-yellow-500">(Marcações Pausadas)</span>' : '';
                         playerDateDisplay.innerHTML = `<p class="text-2xl">Data ativa: <span class="font-bold text-amber-400">${formattedDate}</span> ${statusText}</p>`;
                         renderSlotsForDate(activeDate, isPaused);
-                        renderWaitingList(activeDate, isPaused); // Renderiza a lista de espera para jogador
-                        waitingListContainer.classList.remove('hidden'); // Mostra sempre para jogador se a data estiver ativa
+                        if (isWaitingListActive) {
+                            renderWaitingList(activeDate, isPaused);
+                            waitingListContainer.classList.remove('hidden');
+                        }
                     } else {
                         playerDateDisplay.innerHTML = `<p class="text-2xl text-red-500 font-bold">A aguardar a libertação da data.</p>`;
                     }
@@ -617,16 +621,22 @@
             async function refreshUI() {
                 try {
                     const configDoc = await getDoc(doc(db, "configuracoes", "global"));
-                    const settings = configDoc.exists() ? configDoc.data() : { data_ativa: null, marcacoes_pausadas: false, numero_vagas: 24 };
+                    const settings = configDoc.exists() ? configDoc.data() : { 
+                        data_ativa: null, 
+                        marcacoes_pausadas: false, 
+                        numero_vagas: 24,
+                        lista_espera_ativa: false 
+                    };
                     
                     totalSlots = settings.numero_vagas || 24;
 
                     const userRole = sessionStorage.getItem('userRole');
                     if (userRole) {
-                        updatePresenceViewForRole(userRole, settings.data_ativa, settings.marcacoes_pausadas);
+                        updatePresenceViewForRole(userRole, settings.data_ativa, settings.marcacoes_pausadas, settings.lista_espera_ativa);
                     }
                     if(userRole === 'administrador') {
                         currentSlotsDisplay.textContent = `(Ativas: ${totalSlots})`;
+                        toggleWaitingListButton.textContent = settings.lista_espera_ativa ? 'Desativar Lista de Espera' : 'Ativar Lista de Espera';
                         renderUserList();
                     }
                 } catch (error) {
@@ -1041,14 +1051,38 @@
             async function handleConfirmUnmark() {
                 if (!currentSlotData || !currentSlotData.docId) return;
                 const collectionName = currentSlotData.list === 'waiting' ? 'lista_espera' : 'presencas';
+                const freedSlotNumber = parseInt(currentSlotData.slot) + 1; // Guarda o número da vaga para a mensagem
 
                 try {
                     await deleteDoc(doc(db, collectionName, currentSlotData.docId));
                     unconfirmModal.classList.remove('flex');
                     adminActionModal.classList.remove('flex');
-                    refreshUI();
+                    
+                    // --- Início da nova lógica de notificação ---
+                    // Só notifica se uma vaga da lista principal foi liberada e o utilizador é admin
+                    if (collectionName === 'presencas' && sessionStorage.getItem('userRole') === 'administrador') {
+                        const configDoc = await getDoc(doc(db, "configuracoes", "global"));
+                        if (configDoc.exists() && configDoc.data().data_ativa) {
+                            const activeDate = configDoc.data().data_ativa;
+                            
+                            // Verifica se há alguém na lista de espera
+                            const waitingListQuery = query(collection(db, "lista_espera"), where("data_jogo", "==", activeDate));
+                            const waitingListSnapshot = await getDocs(waitingListQuery);
+                            
+                            if (!waitingListSnapshot.empty) {
+                                showMessage(
+                                    'Vaga Liberada!', 
+                                    `A vaga #${freedSlotNumber} foi liberada. Existem ${waitingListSnapshot.size} jogador(es) na lista de espera.`
+                                );
+                            }
+                        }
+                    }
+                    // --- Fim da nova lógica de notificação ---
+
+                    refreshUI(); // Atualiza a UI para todos os utilizadores
                 } catch (error) {
                     showMessage("Erro", "Não foi possível remover a presença.");
+                    console.error("Erro ao remover presença:", error);
                 }
             }
             
@@ -1270,6 +1304,20 @@
                 } catch(error) {
                     console.error("Erro ao mover jogador:", error);
                     showMessage('Erro', 'Não foi possível mover o jogador.');
+                }
+            }
+            
+            async function handleToggleWaitingList() {
+                try {
+                    const configRef = doc(db, "configuracoes", "global");
+                    const configDoc = await getDoc(configRef);
+                    const currentStatus = configDoc.exists() ? configDoc.data().lista_espera_ativa : false;
+                    await setDoc(configRef, { lista_espera_ativa: !currentStatus }, { merge: true });
+                    showMessage('Sucesso', `Lista de espera ${!currentStatus ? 'ativada' : 'desativada'}.`);
+                    refreshUI();
+                } catch (error) {
+                    console.error("Erro ao alternar a lista de espera:", error);
+                    showMessage("Erro", "Não foi possível alterar o estado da lista de espera.");
                 }
             }
 
@@ -1586,7 +1634,7 @@
                 });
                 
                 // Event Listeners da Lista de Espera
-                toggleWaitingListButton.addEventListener('click', () => waitingListContainer.classList.toggle('hidden'));
+                toggleWaitingListButton.addEventListener('click', handleToggleWaitingList);
                 cancelMovePlayerButton.addEventListener('click', () => movePlayerModal.classList.remove('flex'));
                 confirmMovePlayerButton.addEventListener('click', handleConfirmMovePlayer);
 
@@ -1693,3 +1741,4 @@
     </script>
 </body>
 </html>
+
