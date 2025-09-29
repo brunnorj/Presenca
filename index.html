@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF--8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vôlei da Vila</title>
+    <title>Vôlei da Vila com Firebase</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -911,15 +911,15 @@
                     const playerId = target.dataset.playerId;
                     const type = target.dataset.type;
                     const userRole = sessionStorage.getItem('userRole');
-                    const loggedInUserId = sessionStorage.getItem('loggedInUserId');
 
-                    currentSlotData = { slot, docId, playerName, playerId, type };
+                    // CORREÇÃO: Adiciona a propriedade 'list' para identificar a lista correta
+                    currentSlotData = { slot, docId, playerName, playerId, type, list: 'presence' };
 
                     if (target.classList.contains('slot-free')) { 
                         const loggedInUser = sessionStorage.getItem('loggedInUser');
                         modalTitle.textContent = `Confirmar Vaga #${parseInt(slot) + 1}`;
                         modalConfirmText.textContent = `Confirma a presença para ${loggedInUser}?`;
-                        confirmBtn.onclick = handleConfirmPresence; // Define a função correta
+                        confirmBtn.onclick = handleConfirmPresence; 
                         presenceModal.classList.add('flex');
                     } else if (target.classList.contains('slot-mine') || target.classList.contains('slot-guest-mine')) {
                          unconfirmModalText.textContent = `Tem a certeza de que deseja remover a presença de ${playerName}?`;
@@ -1050,42 +1050,64 @@
             
             async function handleConfirmUnmark() {
                 if (!currentSlotData || !currentSlotData.docId) return;
+
+                const isMyOwnPlayerSlot = currentSlotData.playerId === sessionStorage.getItem('loggedInUserId') && currentSlotData.type === 'jogador';
                 const collectionName = currentSlotData.list === 'waiting' ? 'lista_espera' : 'presencas';
-                const freedSlotNumber = parseInt(currentSlotData.slot) + 1; // Guarda o número da vaga para a mensagem
 
                 try {
-                    await deleteDoc(doc(db, collectionName, currentSlotData.docId));
+                    const batch = writeBatch(db);
+
+                    // Documento principal a ser removido (o que foi clicado)
+                    const mainDocRef = doc(db, collectionName, currentSlotData.docId);
+                    batch.delete(mainDocRef);
+
+                    // Se for a presença do próprio jogador (não um convidado), remove também os seus convidados
+                    if (isMyOwnPlayerSlot && collectionName === 'presencas') {
+                        const configDoc = await getDoc(doc(db, "configuracoes", "global"));
+                        if (configDoc.exists() && configDoc.data().data_ativa) {
+                            const activeDate = configDoc.data().data_ativa;
+                            const qGuests = query(collection(db, "presencas"),
+                                where("data_jogo", "==", activeDate),
+                                where("jogador_id", "==", currentSlotData.playerId),
+                                where("tipo", "==", "convidado"));
+                            
+                            const guestsSnapshot = await getDocs(qGuests);
+                            guestsSnapshot.forEach(guestDoc => {
+                                batch.delete(guestDoc.ref);
+                            });
+                        }
+                    }
+
+                    await batch.commit();
+                    
                     unconfirmModal.classList.remove('flex');
                     adminActionModal.classList.remove('flex');
                     
-                    // --- Início da nova lógica de notificação ---
-                    // Só notifica se uma vaga da lista principal foi liberada e o utilizador é admin
-                    if (collectionName === 'presencas' && sessionStorage.getItem('userRole') === 'administrador') {
+                    // Lógica de notificação para admin
+                    if (collectionName === 'presencas') {
                         const configDoc = await getDoc(doc(db, "configuracoes", "global"));
                         if (configDoc.exists() && configDoc.data().data_ativa) {
                             const activeDate = configDoc.data().data_ativa;
                             
-                            // Verifica se há alguém na lista de espera
                             const waitingListQuery = query(collection(db, "lista_espera"), where("data_jogo", "==", activeDate));
                             const waitingListSnapshot = await getDocs(waitingListQuery);
                             
-                            if (!waitingListSnapshot.empty) {
+                            if (!waitingListSnapshot.empty && sessionStorage.getItem('userRole') === 'administrador') {
                                 showMessage(
                                     'Vaga Liberada!', 
-                                    `A vaga #${freedSlotNumber} foi liberada. Existem ${waitingListSnapshot.size} jogador(es) na lista de espera.`
+                                    `Uma ou mais vagas foram liberadas. Existem ${waitingListSnapshot.size} jogador(es) na lista de espera.`
                                 );
                             }
                         }
                     }
-                    // --- Fim da nova lógica de notificação ---
 
-                    refreshUI(); // Atualiza a UI para todos os utilizadores
+                    refreshUI();
                 } catch (error) {
                     showMessage("Erro", "Não foi possível remover a presença.");
                     console.error("Erro ao remover presença:", error);
                 }
             }
-            
+
             async function handlePenalty(days) {
                 if (selectedPlayerForAction.type === 'convidado') {
                     showMessage('Aviso', 'A penalidade só pode ser aplicada a jogadores registados. Remova a presença se necessário.');
@@ -1741,4 +1763,3 @@
     </script>
 </body>
 </html>
-
