@@ -142,6 +142,24 @@
             padding-left: 1rem;
             margin-bottom: 1rem;
         }
+
+        /* NOVO: Estilos para o Modal de Zoom de Imagem */
+        #image-zoom-modal {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease-in-out;
+        }
+        #image-zoom-modal.flex {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #image-zoom-modal img {
+            transform: scale(0.8);
+            transition: transform 0.3s ease-in-out;
+        }
+        #image-zoom-modal.flex img {
+            transform: scale(1);
+        }
     </style>
 </head>
 <body class="bg-pattern text-white min-h-screen">
@@ -195,6 +213,8 @@
                 <button data-tab="album" class="tab-button text-2xl font-bold py-4 px-6">Álbum</button>
                 <button id="admin-tab-button" data-tab="cadastro" class="tab-button text-2xl font-bold py-4 px-6 hidden">Gestão</button>
                 <button data-tab="legal" class="tab-button text-2xl font-bold py-4 px-6">Legal</button>
+                <!-- BOTÃO LOG ADICIONADO -->
+                <button id="log-tab-button" data-tab="log" class="tab-button text-2xl font-bold py-4 px-6 hidden">Log</button>
             </div>
         </nav>
 
@@ -247,7 +267,21 @@
             <!-- Outras Abas (sem alterações de lógica) -->
             <div id="torneio" class="tab-content hidden"><div class="bg-gray-800 bg-opacity-50 rounded-2xl p-8 border border-gray-700"><h2 class="text-5xl font-brand font-bold text-center mb-6 text-amber-400">TORNEIOS</h2><p class="text-xl text-center text-gray-300">Em breve, informações sobre o nosso próximo torneio de integração.</p></div></div>
             <div id="informacoes" class="tab-content hidden"><div class="bg-gray-800 bg-opacity-50 rounded-2xl p-8 border border-gray-700"><h2 class="text-5xl font-brand font-bold text-center mb-6 text-amber-400">INFORMAÇÕES GERAIS</h2><ul class="text-xl text-gray-300 space-y-4 list-disc list-inside"><li><strong>Dias de Jogo:</strong> Terças, Quintas e Sábado.</li><li><strong>Horário:</strong> Das 20:00 às 22:00 (Terça e Quinta) e Das 15:00 às 18:00 (Sábado)</li><li><strong>Local:</strong> R. Bento Gonçalves, 457A - Encantado, Rio de Janeiro - RJ, 20755-000.</li><li><strong>Regras:</strong> Respeito acima de tudo.</li></ul></div></div>
-            <div id="album" class="tab-content hidden"><div class="bg-gray-800 bg-opacity-50 rounded-2xl p-8 border border-gray-700"><h2 class="text-5xl font-brand font-bold text-center mb-6 text-amber-400">ÁLBUM DE FOTOS</h2><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"><img src="https://placehold.co/400x300/001f3f/FBBF24?text=Volei" alt="Foto da equipa" class="rounded-lg shadow-lg"><img src="https://placehold.co/400x300/001f3f/FBBF24?text=Jogo" alt="Foto da equipa" class="rounded-lg shadow-lg"></div></div></div>
+            <div id="album" class="tab-content hidden">
+                <div class="bg-gray-800 bg-opacity-50 rounded-2xl p-8 border border-gray-700">
+                    <h2 class="text-5xl font-brand font-bold text-center mb-6 text-amber-400">ÁLBUM DE FOTOS</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <img src="https://raw.githubusercontent.com/brunnorj/Presenca/refs/heads/main/Fotos/Foto1.jpg" alt="Foto da equipa 1" class="rounded-lg shadow-lg aspect-video object-cover cursor-pointer transition-transform duration-300 hover:scale-105">
+                        <img src="https://placehold.co/400x300/001f3f/FBBF24?text=Foto+2" alt="Foto da equipa 2" class="rounded-lg shadow-lg aspect-video object-cover cursor-pointer transition-transform duration-300 hover:scale-105">
+                        <img src="https://placehold.co/400x300/001f3f/FBBF24?text=Foto+3" alt="Foto da equipa 3" class="rounded-lg shadow-lg aspect-video object-cover cursor-pointer transition-transform duration-300 hover:scale-105">
+                        <img src="https://placehold.co/400x300/001f3f/FBBF24?text=Foto+4" alt="Foto da equipa 4" class="rounded-lg shadow-lg aspect-video object-cover cursor-pointer transition-transform duration-300 hover:scale-105">
+                        <img src="https://placehold.co/400x300/001f3f/FBBF24?text=Foto+5" alt="Foto da equipa 5" class="rounded-lg shadow-lg aspect-video object-cover cursor-pointer transition-transform duration-300 hover:scale-105">
+                        <img src="https://placehold.co/400x300/001f3f/FBBF24?text=Foto+6" alt="Foto da equipa 6" class="rounded-lg shadow-lg aspect-video object-cover cursor-pointer transition-transform duration-300 hover:scale-105">
+                        <img src="https://placehold.co/400x300/001f3f/FBBF24?text=Foto+7" alt="Foto da equipa 7" class="rounded-lg shadow-lg aspect-video object-cover cursor-pointer transition-transform duration-300 hover:scale-105">
+                        <img src="https://placehold.co/400x300/001f3f/FBBF24?text=Foto+8" alt="Foto da equipa 8" class="rounded-lg shadow-lg aspect-video object-cover cursor-pointer transition-transform duration-300 hover:scale-105">
+                    </div>
+                </div>
+            </div>
             
             <!-- Aba de Cadastro (Admin) -->
             <div id="cadastro" class="tab-content hidden">
@@ -281,7 +315,7 @@
                 </div>
             </div>
 
-            <!-- NOVA ABA: Legal -->
+            <!-- ABA Legal -->
             <div id="legal" class="tab-content hidden">
                 <div class="bg-gray-800 bg-opacity-50 rounded-2xl p-8 border border-gray-700 space-y-12">
                     
@@ -387,11 +421,27 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- NOVA ABA: Log -->
+            <div id="log" class="tab-content hidden">
+                <div class="bg-gray-800 bg-opacity-50 rounded-2xl p-8 border border-gray-700">
+                    <h2 class="text-5xl font-brand font-bold text-center mb-6 text-amber-400">REGISTRO DE ATIVIDADES</h2>
+                    <div id="log-list" class="space-y-3 max-h-[600px] overflow-y-auto pr-2">
+                        <!-- Entradas de log serão inseridas aqui pelo JavaScript -->
+                    </div>
+                </div>
+            </div>
+
 
         </main>
         <footer class="text-center p-4 mt-8 text-gray-400 text-base">
             Copyright 2025 Bruno Sampaio
         </footer>
+    </div>
+
+    <!-- NOVO: Modal para Zoom de Imagem -->
+    <div id="image-zoom-modal" class="modal fixed inset-0 bg-black bg-opacity-80 items-center justify-center z-[100] p-4 cursor-pointer">
+        <img id="zoomed-image" src="" alt="Imagem ampliada" class="max-w-[90vw] max-h-[90vh] rounded-lg shadow-2xl">
     </div>
 
     <!-- Modals -->
@@ -565,12 +615,70 @@
             const freeSlotsSelect = document.getElementById('free-slots-select');
             const confirmMovePlayerButton = document.getElementById('confirm-move-player-button');
             const cancelMovePlayerButton = document.getElementById('cancel-move-player-button');
+            // Elementos do Log
+            const logList = document.getElementById('log-list');
+            // NOVO: Elementos do Zoom de Imagem
+            const albumContainer = document.getElementById('album');
+            const imageZoomModal = document.getElementById('image-zoom-modal');
+            const zoomedImage = document.getElementById('zoomed-image');
 
             let currentSlotData = null; 
             let selectedPlayerForAction = null;
-            let playerToMove = null; // Novo: Para armazenar dados do jogador a ser movido
+            let playerToMove = null;
             let userToEditId = null;
             let userToDeleteId = null;
+            let userToDeleteName = null; // Para log
+
+            // --- FUNÇÕES DE LOG ---
+            async function logAction(description) {
+                try {
+                    const user = sessionStorage.getItem('loggedInUser') || 'Sistema';
+                    await addDoc(collection(db, "logs"), {
+                        timestamp: new Date(),
+                        user: user,
+                        action: description
+                    });
+                } catch (error) {
+                    console.error("Erro ao registrar ação no log: ", error);
+                }
+            }
+            
+            async function renderLogs() {
+                logList.innerHTML = '<p class="text-center">A carregar registos...</p>';
+                try {
+                    const q = query(collection(db, "logs"));
+                    const querySnapshot = await getDocs(q);
+                    
+                    const logs = [];
+                    querySnapshot.forEach((doc) => {
+                        logs.push(doc.data());
+                    });
+
+                    // Ordena os logs por data, do mais recente para o mais antigo
+                    logs.sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
+
+                    if (logs.length === 0) {
+                        logList.innerHTML = '<p class="text-center text-gray-400">Nenhuma atividade registada ainda.</p>';
+                        return;
+                    }
+
+                    logList.innerHTML = logs.map(logEntry => {
+                        const date = logEntry.timestamp.toDate();
+                        const formattedDate = `${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR')}`;
+                        return `
+                            <div class="bg-gray-700 p-3 rounded-lg">
+                                <p class="text-white"><strong class="text-amber-400">${logEntry.user}</strong>: ${logEntry.action}</p>
+                                <p class="text-xs text-gray-400 text-right">${formattedDate}</p>
+                            </div>
+                        `;
+                    }).join('');
+
+                } catch (error) {
+                    console.error("Erro ao carregar logs: ", error);
+                    logList.innerHTML = '<p class="text-center text-red-500">Falha ao carregar os registos.</p>';
+                }
+            }
+
 
             // --- FUNÇÕES GERAIS ---
             function showMessage(title, text) {
@@ -660,12 +768,11 @@
 
                     users.sort((a, b) => a.nome_exibicao.localeCompare(b.nome_exibicao)).forEach(user => {
                         const penaltyInfo = user.penalidade_ate ? `<p class="text-xs text-red-400">Penalizado até ${new Date(user.penalidade_ate + 'T00:00:00').toLocaleDateString('pt-BR')}</p>` : '';
-                        const removePenaltyButton = user.penalidade_ate ? `<button data-userid="${user.id}" class="remove-penalty-btn bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-sm">Remover Penalidade</button>` : '';
+                        const removePenaltyButton = user.penalidade_ate ? `<button data-userid="${user.id}" data-username="${user.nome_exibicao}" class="remove-penalty-btn bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-sm">Remover Penalidade</button>` : '';
                         
-                        // NOVO: Lógica para bloqueio de inatividade
                         const isBlocked = user.bloqueado_inatividade === true;
                         const blockedInfo = isBlocked ? `<p class="text-xs text-red-500 font-bold">LOGIN BLOQUEADO</p>` : '';
-                        const unblockButton = isBlocked ? `<button data-userid="${user.id}" class="unblock-user-btn bg-teal-500 hover:bg-teal-600 text-white font-bold py-1 px-3 rounded text-sm">Desbloquear</button>` : '';
+                        const unblockButton = isBlocked ? `<button data-userid="${user.id}" data-username="${user.nome_exibicao}" class="unblock-user-btn bg-teal-500 hover:bg-teal-600 text-white font-bold py-1 px-3 rounded text-sm">Desbloquear</button>` : '';
 
                         const userEl = document.createElement('div');
                         userEl.className = 'flex items-center justify-between bg-gray-700 p-3 rounded-lg';
@@ -697,14 +804,14 @@
                 }
             }
 
-            // NOVO: Função para desbloquear usuário
-            async function handleUnblockUser(userId) {
+            async function handleUnblockUser(userId, userName) {
                 try {
                     const userRef = doc(db, "jogadores", userId);
                     await updateDoc(userRef, {
                         bloqueado_inatividade: false,
-                        ultimo_login: new Date().toISOString().split('T')[0] // Reseta a contagem de inatividade
+                        ultimo_login: new Date().toISOString().split('T')[0]
                     });
+                    logAction(`Desbloqueou o jogador ${userName} por inatividade.`);
                     showMessage('Sucesso', 'O jogador foi desbloqueado.');
                     renderUserList();
                 } catch (error) {
@@ -720,10 +827,19 @@
                 
                 try {
                     const userRef = doc(db, "jogadores", userToEditId);
+                    const userDoc = await getDoc(userRef);
+                    const userName = userDoc.exists() ? userDoc.data().nome_exibicao : `ID ${userToEditId}`;
+
                     const updateData = { perfil: newRole };
-                    if (newPassword) updateData.senha = newPassword;
+                    let logMessage = `Alterou o perfil de ${userName} para ${newRole}.`;
+
+                    if (newPassword) {
+                        updateData.senha = newPassword;
+                        logMessage += ` E redefiniu a senha.`;
+                    }
                     
                     await updateDoc(userRef, updateData);
+                    logAction(logMessage);
                     
                     showMessage('Sucesso', 'Dados do jogador atualizados.');
                     editUserModal.classList.remove('flex');
@@ -769,6 +885,7 @@
                         }
 
                         await updateDoc(userRef, { senha: newPassword });
+                        logAction(`Alterou a própria senha.`);
                         showMessage("Sucesso", "Senha alterada com sucesso!");
                         changePasswordModal.classList.remove('flex');
                         changePasswordForm.reset();
@@ -785,9 +902,11 @@
             async function handleConfirmDeleteUser() {
                 try {
                     await deleteDoc(doc(db, "jogadores", userToDeleteId));
+                    logAction(`Excluiu o jogador ${userToDeleteName}.`);
                     showMessage('Sucesso', 'Jogador excluído do sistema.');
                     deleteUserModal.classList.remove('flex');
                     userToDeleteId = null;
+                    userToDeleteName = null;
                     renderUserList();
                 } catch (error) {
                     console.error("Erro ao excluir utilizador: ", error);
@@ -795,10 +914,11 @@
                 }
             }
 
-            async function handleRemovePenalty(userId) {
+            async function handleRemovePenalty(userId, userName) {
                 try {
                     const userRef = doc(db, "jogadores", userId);
                     await updateDoc(userRef, { penalidade_ate: null });
+                    logAction(`Removeu a penalidade do jogador ${userName}.`);
                     showMessage('Sucesso', 'A penalidade do jogador foi removida.');
                     renderUserList();
                 } catch (error) {
@@ -912,7 +1032,6 @@
                     const type = target.dataset.type;
                     const userRole = sessionStorage.getItem('userRole');
 
-                    // CORREÇÃO: Adiciona a propriedade 'list' para identificar a lista correta
                     currentSlotData = { slot, docId, playerName, playerId, type, list: 'presence' };
 
                     if (target.classList.contains('slot-free')) { 
@@ -934,10 +1053,10 @@
                 }
             }
             
-            // NOVO: Função para definir o número de vagas
             async function setTotalSlots(count) {
                 try {
                     await setDoc(doc(db, "configuracoes", "global"), { numero_vagas: count }, { merge: true });
+                    logAction(`Alterou o número de vagas para ${count}.`);
                     showMessage('Sucesso', `O número de vagas foi definido para ${count}.`);
                     refreshUI();
                 } catch (error) {
@@ -980,6 +1099,7 @@
                         nome_convidado: guestName
                     });
                     
+                    logAction(`Adicionou o convidado "${guestName}" na vaga #${slotNumber + 1}.`);
                     guestModal.classList.remove('flex');
                     guestForm.reset();
                     refreshUI();
@@ -1010,7 +1130,6 @@
                     const activeDate = configDoc.data().data_ativa;
                     const presencasRef = collection(db, "presencas");
 
-                    // Fazer a verificação antes de escrever
                     const qUser = query(presencasRef, where("data_jogo", "==", activeDate), where("jogador_id", "==", loggedInUserId), where("tipo", "==", "jogador"));
                     const qSlot = query(presencasRef, where("data_jogo", "==", activeDate), where("numero_vaga", "==", parseInt(currentSlotData.slot)));
 
@@ -1031,14 +1150,15 @@
                         return;
                     }
 
-                    // Se passar nas verificações, adiciona o documento
                     await addDoc(presencasRef, {
                         data_jogo: activeDate,
                         jogador_id: loggedInUserId,
                         numero_vaga: parseInt(currentSlotData.slot),
                         tipo: 'jogador'
                     });
-
+                    
+                    const slotNumber = parseInt(currentSlotData.slot) + 1;
+                    logAction(`Marcou presença na vaga #${slotNumber}.`);
                     refreshUI();
 
                 } catch (error) {
@@ -1056,12 +1176,9 @@
 
                 try {
                     const batch = writeBatch(db);
-
-                    // Documento principal a ser removido (o que foi clicado)
                     const mainDocRef = doc(db, collectionName, currentSlotData.docId);
                     batch.delete(mainDocRef);
 
-                    // Se for a presença do próprio jogador (não um convidado), remove também os seus convidados
                     if (isMyOwnPlayerSlot && collectionName === 'presencas') {
                         const configDoc = await getDoc(doc(db, "configuracoes", "global"));
                         if (configDoc.exists() && configDoc.data().data_ativa) {
@@ -1080,18 +1197,27 @@
 
                     await batch.commit();
                     
+                    const userPerformingAction = sessionStorage.getItem('loggedInUser');
+                    const userRole = sessionStorage.getItem('userRole');
+                    const playerRemoved = currentSlotData.playerName;
+                    const slotNumber = parseInt(currentSlotData.slot) + 1;
+                    const listType = currentSlotData.list === 'waiting' ? 'lista de espera' : 'lista de presença';
+
+                    if (userRole === 'administrador' && userPerformingAction !== playerRemoved) {
+                         logAction(`Removeu ${playerRemoved} da vaga #${slotNumber} da ${listType}.`);
+                    } else {
+                         logAction(`Removeu sua própria presença (${playerRemoved}) da vaga #${slotNumber} da ${listType}.`);
+                    }
+
                     unconfirmModal.classList.remove('flex');
                     adminActionModal.classList.remove('flex');
                     
-                    // Lógica de notificação para admin
                     if (collectionName === 'presencas') {
                         const configDoc = await getDoc(doc(db, "configuracoes", "global"));
                         if (configDoc.exists() && configDoc.data().data_ativa) {
                             const activeDate = configDoc.data().data_ativa;
-                            
                             const waitingListQuery = query(collection(db, "lista_espera"), where("data_jogo", "==", activeDate));
                             const waitingListSnapshot = await getDocs(waitingListQuery);
-                            
                             if (!waitingListSnapshot.empty && sessionStorage.getItem('userRole') === 'administrador') {
                                 showMessage(
                                     'Vaga Liberada!', 
@@ -1100,7 +1226,6 @@
                             }
                         }
                     }
-
                     refreshUI();
                 } catch (error) {
                     showMessage("Erro", "Não foi possível remover a presença.");
@@ -1121,6 +1246,7 @@
 
                     const userRef = doc(db, "jogadores", selectedPlayerForAction.id);
                     await updateDoc(userRef, { penalidade_ate: penaltyEndDate });
+                    logAction(`Aplicou penalidade de ${days} dias a ${selectedPlayerForAction.name}.`);
                     
                     await handleConfirmUnmark(); 
 
@@ -1134,7 +1260,6 @@
             }
 
              // --- LÓGICA DA LISTA DE ESPERA ---
-
             async function renderWaitingList(dateString, isPaused) {
                 waitingSlots.innerHTML = '';
                 const loggedInUserId = sessionStorage.getItem('loggedInUserId');
@@ -1217,7 +1342,7 @@
                 if (target.classList.contains('slot-free')) {
                     modalTitle.textContent = 'Entrar na Lista de Espera';
                     modalConfirmText.textContent = `Deseja entrar na vaga de espera #${parseInt(slot) + 1}?`;
-                    confirmBtn.onclick = handleConfirmWaitingPresence; // Atribui a função correta
+                    confirmBtn.onclick = handleConfirmWaitingPresence;
                     presenceModal.classList.add('flex');
                 } else if (target.classList.contains('slot-waiting-mine')) {
                     unconfirmModalText.textContent = `Deseja sair da lista de espera?`;
@@ -1258,7 +1383,6 @@
                     const presencasRef = collection(db, "presencas");
                     const waitingListRef = collection(db, "lista_espera");
 
-                    // Verificações antes de escrever
                     const qUserPresence = query(presencasRef, where("data_jogo", "==", activeDate), where("jogador_id", "==", loggedInUserId));
                     const qUserWaiting = query(waitingListRef, where("data_jogo", "==", activeDate), where("jogador_id", "==", loggedInUserId));
                     const qSlotWaiting = query(waitingListRef, where("data_jogo", "==", activeDate), where("numero_vaga", "==", parseInt(currentSlotData.slot)));
@@ -1281,13 +1405,13 @@
                         return;
                     }
 
-                    // Adiciona à lista de espera
                     await addDoc(waitingListRef, {
                         data_jogo: activeDate,
                         jogador_id: loggedInUserId,
                         numero_vaga: parseInt(currentSlotData.slot)
                     });
-
+                    
+                    logAction(`Entrou na lista de espera (vaga #${parseInt(currentSlotData.slot) + 1}).`);
                     refreshUI();
 
                 } catch (error) {
@@ -1306,10 +1430,8 @@
                     const activeDate = configDoc.data().data_ativa;
 
                     const batch = writeBatch(db);
-                    // Remove da lista de espera
                     const waitingRef = doc(db, "lista_espera", playerToMove.waitingDocId);
                     batch.delete(waitingRef);
-                    // Adiciona à lista de presença
                     const presenceRef = doc(collection(db, "presencas"));
                     batch.set(presenceRef, {
                         data_jogo: activeDate,
@@ -1319,6 +1441,7 @@
                     });
                     await batch.commit();
 
+                    logAction(`Moveu ${playerToMove.name} da lista de espera para a vaga #${parseInt(targetSlot) + 1}.`);
                     showMessage('Sucesso', `${playerToMove.name} foi movido para a lista de presença.`);
                     movePlayerModal.classList.remove('flex');
                     playerToMove = null;
@@ -1335,6 +1458,7 @@
                     const configDoc = await getDoc(configRef);
                     const currentStatus = configDoc.exists() ? configDoc.data().lista_espera_ativa : false;
                     await setDoc(configRef, { lista_espera_ativa: !currentStatus }, { merge: true });
+                    logAction(!currentStatus ? 'Ativou a lista de espera.' : 'Desativou a lista de espera.');
                     showMessage('Sucesso', `Lista de espera ${!currentStatus ? 'ativada' : 'desativada'}.`);
                     refreshUI();
                 } catch (error) {
@@ -1437,12 +1561,16 @@
                 tabs.forEach(tab => tab.classList.remove('active'));
                 event.currentTarget.classList.add('active');
                 const tabId = event.currentTarget.dataset.tab;
+
+                if (tabId === 'log') {
+                    renderLogs(); // Carrega os logs quando a aba é clicada
+                }
+
                 tabContents.forEach(content => {
                     content.id === tabId ? content.classList.remove('hidden') : content.classList.add('hidden');
                 });
             }
             
-            // ATUALIZADO: Lógica de Login com verificação de inatividade
             async function handleLogin(event) {
                 event.preventDefault();
                 const loginErrorEl = document.getElementById('login-error');
@@ -1453,11 +1581,9 @@
                 const normalizedUsername = usernameInput.toLowerCase().replace(/\s+/g, '');
                 
                 try {
-                    // 1. Procura o utilizador pelo nome
                     const q = query(collection(db, "jogadores"), where("nome_usuario", "==", normalizedUsername));
                     const querySnapshot = await getDocs(q);
 
-                    // 2. Se não encontrar, mostra erro
                     if (querySnapshot.empty) {
                         loginErrorEl.textContent = 'Utilizador ou senha inválidos.';
                         loginErrorEl.classList.remove('hidden');
@@ -1467,21 +1593,18 @@
                     const userDoc = querySnapshot.docs[0];
                     const userData = userDoc.data();
 
-                    // 3. Verifica se o login já está bloqueado por inatividade
                     if (userData.bloqueado_inatividade) {
                         loginErrorEl.textContent = 'Login bloqueado por inatividade.';
                         loginErrorEl.classList.remove('hidden');
                         return;
                     }
                     
-                    // 4. Verifica a senha
                     if (userData.senha !== password) {
                         loginErrorEl.textContent = 'Utilizador ou senha inválidos.';
                         loginErrorEl.classList.remove('hidden');
                         return;
                     }
                     
-                    // 5. Verifica se está penalizado
                     if (userData.penalidade_ate) {
                         const today = new Date();
                         today.setHours(0, 0, 0, 0);
@@ -1494,14 +1617,12 @@
                         }
                     }
                     
-                    // 6. Verifica a inatividade para utilizadores padrão
                     if (userData.perfil === 'padrão' && userData.ultimo_login) {
                         const lastLoginDate = new Date(userData.ultimo_login);
                         const today = new Date();
                         const diffDays = Math.floor((today - lastLoginDate) / (1000 * 60 * 60 * 24));
                         
                         if (diffDays > 14) {
-                            // Bloqueia o utilizador e impede o login
                             await updateDoc(doc(db, "jogadores", userDoc.id), { bloqueado_inatividade: true });
                             loginErrorEl.textContent = 'Login bloqueado por inatividade.';
                             loginErrorEl.classList.remove('hidden');
@@ -1509,7 +1630,6 @@
                         }
                     }
 
-                    // 7. Sucesso! Atualiza a data do último login
                     await updateDoc(doc(db, "jogadores", userDoc.id), { 
                         ultimo_login: new Date().toISOString().split('T')[0]
                     });
@@ -1534,11 +1654,11 @@
                 loginScreen.classList.remove('hidden');
                 appScreen.classList.add('hidden');
                 adminTabButton.classList.add('hidden');
+                document.getElementById('log-tab-button').classList.add('hidden');
                 loginForm.reset();
                 document.querySelector('.tab-button[data-tab="presenca"]').click();
             }
             
-            // ATUALIZADO: Lógica de Registo para incluir novos campos
             async function handleRegistration(event) {
                 event.preventDefault();
                 const registrationMessage = document.getElementById('registration-message');
@@ -1568,9 +1688,10 @@
                             senha: newPassword,
                             perfil: role,
                             penalidade_ate: null,
-                            ultimo_login: new Date().toISOString().split('T')[0], // Novo campo
-                            bloqueado_inatividade: false // Novo campo
+                            ultimo_login: new Date().toISOString().split('T')[0],
+                            bloqueado_inatividade: false
                         });
+                        logAction(`Cadastrou o novo jogador: ${newUsername} (Perfil: ${role}).`);
                         registrationMessage.textContent = "Jogador cadastrado!";
                         registrationMessage.className = "text-center text-lg text-green-500";
                         registrationForm.reset();
@@ -1586,10 +1707,13 @@
             
             function showApp(username, role) {
                 welcomeMessage.textContent = `Bem-vindo(a), ${username}!`;
+                const logTabButton = document.getElementById('log-tab-button');
                 if (role === 'administrador') {
                     adminTabButton.classList.remove('hidden');
+                    logTabButton.classList.remove('hidden');
                 } else {
                     adminTabButton.classList.add('hidden');
+                    logTabButton.classList.add('hidden');
                 }
                 loginScreen.classList.add('hidden');
                 appScreen.classList.remove('hidden');
@@ -1613,7 +1737,6 @@
                 confirmDeleteUserBtn.addEventListener('click', handleConfirmDeleteUser);
                 messageOkButton.addEventListener('click', () => messageModal.classList.remove('flex'));
                 
-                // NOVO: Listeners para os botões de vagas
                 set18SlotsButton.addEventListener('click', () => setTotalSlots(18));
                 set24SlotsButton.addEventListener('click', () => setTotalSlots(24));
                 
@@ -1630,7 +1753,7 @@
 
                 cancelBtn.addEventListener('click', () => {
                     presenceModal.classList.remove('flex');
-                    confirmBtn.onclick = null; // Limpa o handler para evitar execuções acidentais
+                    confirmBtn.onclick = null;
                 });
                 
                 cancelUnmarkBtn.addEventListener('click', () => unconfirmModal.classList.remove('flex'));
@@ -1655,12 +1778,10 @@
                     button.addEventListener('click', (e) => handlePenalty(parseInt(e.target.dataset.penalty)));
                 });
                 
-                // Event Listeners da Lista de Espera
                 toggleWaitingListButton.addEventListener('click', handleToggleWaitingList);
                 cancelMovePlayerButton.addEventListener('click', () => movePlayerModal.classList.remove('flex'));
                 confirmMovePlayerButton.addEventListener('click', handleConfirmMovePlayer);
 
-                // ATUALIZADO: Event listener para a lista de utilizadores
                 userList.addEventListener('click', (e) => {
                     const target = e.target;
                     if (target.classList.contains('edit-user-btn')) {
@@ -1672,15 +1793,15 @@
                     }
                     if (target.classList.contains('delete-user-btn')) {
                         userToDeleteId = target.dataset.userid;
+                        userToDeleteName = target.dataset.username;
                         deleteUserText.textContent = `Tem a certeza de que quer excluir ${target.dataset.username}? Esta ação não pode ser desfeita.`;
                         deleteUserModal.classList.add('flex');
                     }
                     if (target.classList.contains('remove-penalty-btn')) {
-                        handleRemovePenalty(target.dataset.userid);
+                        handleRemovePenalty(target.dataset.userid, target.dataset.username);
                     }
-                    // NOVO: Adiciona o evento para o botão de desbloquear
                     if (target.classList.contains('unblock-user-btn')) {
-                        handleUnblockUser(target.dataset.userid);
+                        handleUnblockUser(target.dataset.userid, target.dataset.username);
                     }
                 });
                 cancelEditUserBtn.addEventListener('click', () => editUserModal.classList.remove('flex'));
@@ -1690,6 +1811,7 @@
                     const newDate = e.target.value;
                     try {
                         await setDoc(doc(db, "configuracoes", "global"), { data_ativa: newDate, marcacoes_pausadas: false }, { merge: true });
+                        logAction(`Alterou a data ativa para ${new Date(newDate + 'T00:00:00').toLocaleDateString('pt-BR')}.`);
                         refreshUI();
                     } catch (error) { console.error("Erro ao definir data ativa: ", error); }
                 });
@@ -1700,6 +1822,7 @@
                         const configDoc = await getDoc(configRef);
                         const currentStatus = configDoc.exists() ? configDoc.data().marcacoes_pausadas : false;
                         await setDoc(configRef, { marcacoes_pausadas: !currentStatus }, { merge: true });
+                        logAction(!currentStatus ? 'Pausou as marcações.' : 'Retomou as marcações.');
                         refreshUI();
                     } catch (error) { console.error("Erro ao pausar/retomar marcações: ", error); }
                 });
@@ -1730,7 +1853,7 @@
                             deletePresencesModal.classList.remove('flex');
                             return;
                         }
-                        // Deleta presenças e lista de espera
+
                         const qPresences = query(collection(db, "presencas"), where("data_jogo", "==", activeDate));
                         const qWaiting = query(collection(db, "lista_espera"), where("data_jogo", "==", activeDate));
                         const [presencesSnapshot, waitingSnapshot] = await Promise.all([getDocs(qPresences), getDocs(qWaiting)]);
@@ -1740,6 +1863,7 @@
                         waitingSnapshot.docs.forEach(d => batch.delete(d.ref));
                         await batch.commit();
 
+                        logAction(`Excluiu todas as presenças e a lista de espera do dia ${activeDate}.`);
                         await setDoc(configDocRef, { data_ativa: null }, { merge: true });
                         showMessage('Sucesso', 'Presenças e lista de espera removidas. Data desativada.');
                         deletePresencesModal.classList.remove('flex');
@@ -1756,6 +1880,19 @@
                 reportDateForm.addEventListener('submit', handleGenerateReport);
                 downloadReportButton.addEventListener('click', handleDownloadReport);
                 closeReportDisplayButton.addEventListener('click', () => reportDisplayModal.classList.remove('flex'));
+
+                // NOVO: Listeners para Zoom de Imagem
+                albumContainer.addEventListener('click', (e) => {
+                    // Garante que o clique foi em uma imagem dentro do álbum
+                    if (e.target.tagName === 'IMG' && e.target.closest('#album')) {
+                        zoomedImage.src = e.target.src;
+                        imageZoomModal.classList.add('flex');
+                    }
+                });
+
+                imageZoomModal.addEventListener('click', () => {
+                    imageZoomModal.classList.remove('flex');
+                });
             }
             
             main();
@@ -1763,3 +1900,5 @@
     </script>
 </body>
 </html>
+
+
