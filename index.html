@@ -26,6 +26,7 @@
         }
         .slot {
             transition: all 0.3s ease;
+            position: relative; /* Necessário para o ícone de observação */
         }
         .slot-free {
             background-color: #22c55e;
@@ -39,7 +40,7 @@
         .slot-taken {
             background-color: #4b5563;
             color: #e5e7eb;
-            cursor: not-allowed;
+            cursor: pointer; /* Alterado para permitir clique para ver a foto */
         }
         .slot-mine {
             background-color: #FBBF24;
@@ -81,13 +82,6 @@
             transform: translateY(-2px);
         }
 
-        .admin-view .slot-taken,
-        .admin-view .slot-mine,
-        .admin-view .slot-guest,
-        .admin-view .slot-guest-mine,
-        .admin-view .slot-waiting { /* Adicionado */
-            cursor: pointer;
-        }
         .admin-view .slot-taken:hover,
         .admin-view .slot-mine:hover,
         .admin-view .slot-guest:hover,
@@ -105,6 +99,29 @@
             background-color: #6b7280;
             cursor: not-allowed;
             opacity: 0.7;
+        }
+        /* ÍCONE DE OBSERVAÇÃO */
+        .observation-icon {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background-color: #ef4444; /* red-500 */
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            transition: transform 0.2s ease;
+            z-index: 10;
+        }
+        .observation-icon:hover {
+            transform: scale(1.1);
         }
         .font-brand {
             font-family: 'Teko', sans-serif;
@@ -143,7 +160,6 @@
             margin-bottom: 1rem;
         }
 
-        /* NOVO: Estilos para o Modal de Zoom de Imagem */
         #image-zoom-modal {
             opacity: 0;
             pointer-events: none;
@@ -159,6 +175,10 @@
         }
         #image-zoom-modal.flex img {
             transform: scale(1);
+        }
+        #close-player-photo-button {
+            font-size: 2.5rem;
+            line-height: 1;
         }
     </style>
 </head>
@@ -213,7 +233,6 @@
                 <button data-tab="album" class="tab-button text-2xl font-bold py-4 px-6">Álbum</button>
                 <button id="admin-tab-button" data-tab="cadastro" class="tab-button text-2xl font-bold py-4 px-6 hidden">Gestão</button>
                 <button data-tab="legal" class="tab-button text-2xl font-bold py-4 px-6">Legal</button>
-                <!-- BOTÃO LOG ADICIONADO -->
                 <button id="log-tab-button" data-tab="log" class="tab-button text-2xl font-bold py-4 px-6 hidden">Log</button>
             </div>
         </nav>
@@ -224,7 +243,6 @@
                 <div class="text-center mb-8">
                     <h2 class="text-5xl font-brand font-bold text-white">LISTA DE PRESENÇA</h2>
                     <p class="text-xl text-gray-400">Marque a sua presença para o dia ativo.</p>
-                    <!-- BOTÃO CONVIDADO ADICIONADO -->
                     <div id="guest-controls" class="mt-4 hidden">
                         <button id="add-guest-button" class="px-6 py-2 font-bold text-lg bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors">
                             LEVAR CONVIDADO
@@ -256,7 +274,6 @@
                      <div id="presence-slots" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 bg-gray-800 bg-opacity-50 rounded-2xl p-6 border border-gray-700"></div>
                 </div>
                 
-                <!-- NOVO: Container da Lista de Espera -->
                 <div id="waiting-list-container" class="hidden mt-12">
                     <h3 class="text-4xl font-brand text-orange-400 text-center mb-6">LISTA DE ESPERA</h3>
                     <div id="waiting-slots" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 bg-gray-800 bg-opacity-50 rounded-2xl p-6 border border-gray-700"></div>
@@ -264,7 +281,7 @@
 
             </div>
 
-            <!-- Outras Abas (sem alterações de lógica) -->
+            <!-- Outras Abas (sem alterações) -->
             <div id="torneio" class="tab-content hidden"><div class="bg-gray-800 bg-opacity-50 rounded-2xl p-8 border border-gray-700"><h2 class="text-5xl font-brand font-bold text-center mb-6 text-amber-400">TORNEIOS</h2><p class="text-xl text-center text-gray-300">Em breve, informações sobre o nosso próximo torneio de integração.</p></div></div>
             <div id="informacoes" class="tab-content hidden"><div class="bg-gray-800 bg-opacity-50 rounded-2xl p-8 border border-gray-700"><h2 class="text-5xl font-brand font-bold text-center mb-6 text-amber-400">INFORMAÇÕES GERAIS</h2><ul class="text-xl text-gray-300 space-y-4 list-disc list-inside"><li><strong>Dias de Jogo:</strong> Terças, Quintas e Sábado.</li><li><strong>Horário:</strong> Das 20:00 às 21:00 (Terça e Quinta) e Das 15:00 às 18:00 (Sábado)</li><li><strong>Local:</strong> R. Bento Gonçalves, 457A - Encantado, Rio de Janeiro - RJ, 20755-000.</li><li><strong>Regras:</strong> Respeito acima de tudo.</li></ul></div></div>
             <div id="album" class="tab-content hidden">
@@ -283,7 +300,6 @@
                 </div>
             </div>
             
-            <!-- Aba de Cadastro (Admin) -->
             <div id="cadastro" class="tab-content hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div class="bg-gray-800 bg-opacity-50 rounded-2xl p-8 border border-gray-700">
@@ -296,6 +312,10 @@
                             <div>
                                 <label for="new-password" class="text-xl text-gray-300">Senha</label>
                                 <input type="password" id="new-password" name="new-password" class="mt-2 w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white" required>
+                            </div>
+                             <div>
+                                <label for="new-photo-url" class="text-xl text-gray-300">URL da Foto (Opcional)</label>
+                                <input type="url" id="new-photo-url" name="new-photo-url" class="mt-2 w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white" placeholder="https://example.com/foto.jpg">
                             </div>
                             <div>
                                  <label for="user-role" class="text-xl text-gray-300">Perfil de Acesso</label>
@@ -315,32 +335,25 @@
                 </div>
             </div>
 
-            <!-- ABA Legal -->
+            <!-- ABA Legal (sem alterações) -->
             <div id="legal" class="tab-content hidden">
                 <div class="bg-gray-800 bg-opacity-50 rounded-2xl p-8 border border-gray-700 space-y-12">
-                    
-                    <!-- Termos de Uso -->
                     <div class="legal-content">
                         <h2 class="text-5xl font-brand font-bold text-center mb-6 text-amber-400">TERMOS DE USO</h2>
                         <p><strong>Última atualização:</strong> 23 de setembro de 2025</p>
                         <p>Bem-vindo ao Vôlei da Vila! Ao acessar e usar nosso aplicativo, você concorda em cumprir estes Termos de Uso. Por favor, leia-os com atenção.</p>
-                        
                         <h3>1. Aceitação dos Termos</h3>
                         <p>Ao criar uma conta ou usar este serviço, você concorda com estes Termos e com a nossa Política de Privacidade. Se você não concorda com algum destes termos, não utilize o aplicativo.</p>
-                        
                         <h3>2. Descrição do Serviço</h3>
                         <p>O aplicativo Vôlei da Vila é uma ferramenta para facilitar a organização dos jogos de vôlei do nosso grupo. Ele permite que os membros marquem presença nos dias de jogo, entrem em listas de espera e que os administradores gerenciem os participantes.</p>
-                        
                         <h3>3. Conta do Usuário</h3>
                         <ul>
                             <li><strong>Cadastro:</strong> As contas são criadas por um administrador do sistema.</li>
                             <li><strong>Responsabilidade:</strong> Você é responsável por manter a confidencialidade da sua senha e por todas as atividades que ocorrem na sua conta.</li>
                             <li><strong>Uso Pessoal:</strong> Sua conta é para uso pessoal e intransferível.</li>
                         </ul>
-                        
                         <h3>4. Regras de Conduta</h3>
                         <p>Você concorda em usar o aplicativo de forma responsável e respeitosa. É proibido usar o serviço para qualquer finalidade ilegal ou não autorizada.</p>
-                        
                         <h3>5. Funções e Responsabilidades do Administrador</h3>
                         <p>Os usuários com perfil de "administrador" têm permissões adicionais, incluindo:</p>
                         <ul>
@@ -351,30 +364,23 @@
                             <li>Gerenciar o número de vagas e a lista de espera.</li>
                             <li>Desbloquear contas bloqueadas por inatividade.</li>
                         </ul>
-                        
                         <h3>6. Política de Inatividade e Bloqueio de Conta</h3>
                         <ul>
                             <li>Para manter a lista de jogadores ativa e organizada, contas de usuários com perfil "padrão" que permanecerem inativas por mais de <strong>14 (quatorze) dias</strong> consecutivos terão seu acesso bloqueado automaticamente.</li>
                             <li>Um usuário inativo é aquele que não realiza o login no aplicativo dentro do período especificado.</li>
                             <li>Se sua conta for bloqueada, você verá uma mensagem de "Login bloqueado por inatividade". Para reativar sua conta, você deverá entrar em contato com um administrador.</li>
                         </ul>
-                        
                         <h3>7. Limitação de Responsabilidade</h3>
                         <p>O aplicativo é fornecido "como está", sem garantias de qualquer tipo. Não nos responsabilizamos por quaisquer perdas ou danos resultantes do uso ou da incapacidade de usar o serviço.</p>
-                        
                         <h3>8. Alterações nos Termos</h3>
                         <p>Reservamo-nos o direito de modificar estes Termos a qualquer momento. As alterações entrarão em vigor após a sua publicação no aplicativo. O uso continuado do serviço após as alterações constitui sua aceitação dos novos Termos.</p>
-                        
                         <h3>9. Lei Aplicável</h3>
                         <p>Estes Termos serão regidos e interpretados de acordo com as leis da República Federativa do Brasil.</p>
                     </div>
-
-                    <!-- Política de Privacidade -->
                     <div class="legal-content">
                         <h2 class="text-5xl font-brand font-bold text-center mb-6 text-amber-400">POLÍTICA DE PRIVACIDADE</h2>
                         <p><strong>Última atualização:</strong> 23 de setembro de 2025</p>
                         <p>A sua privacidade é importante para nós. Esta Política de Privacidade explica como o aplicativo Vôlei da Vila ("nós", "nosso") coleta, usa e protege as suas informações pessoais.</p>
-                        
                         <h3>1. Informações que Coletamos</h3>
                         <p>Coletamos as seguintes informações quando você é cadastrado no aplicativo:</p>
                         <ul>
@@ -385,7 +391,6 @@
                             <li><strong>Data do Último Login:</strong> Registramos la data do seu último acesso para gerenciar a atividade da conta.</li>
                             <li><strong>Registros de Presença:</strong> As datas em que você confirma presença nos jogos.</li>
                         </ul>
-                        
                         <h3>2. Como Usamos as Suas Informações</h3>
                         <p>As informações coletadas são usadas exclusivamente para os seguintes propósitos:</p>
                         <ul>
@@ -394,17 +399,14 @@
                             <li><strong>Administração Interna:</strong> Permitir que os administradores gerenciem os jogadores, apliquem penalidades e mantenham a organização do grupo.</li>
                             <li><strong>Aplicação de Regras:</strong> Identificar inatividade para aplicar a regra de bloqueio de conta, conforme descrito nos Termos de Uso.</li>
                         </ul>
-                        
                         <h3>3. Armazenamento e Segurança dos Dados</h3>
                         <p>Seus dados são armazenados de forma segura na plataforma Firebase do Google. Empregamos medidas de segurança para proteger suas informações contra acesso, alteração ou divulgação não autorizada. Sua senha é armazenada no banco de dados para fins de autenticação.</p>
-                        
                         <h3>4. Compartilhamento de Informações</h3>
                         <p>Nós não vendemos, alugamos ou compartilhamos suas informações pessoais com terceiros para fins de marketing. As únicas informações compartilhadas são:</p>
                         <ul>
                             <li>O seu <strong>Nome de Exibição</strong> é visível para outros membros do grupo nas listas de presença e de espera.</li>
                             <li>O nome de um convidado que você levar será visível para os outros membros na lista de presença do dia.</li>
                         </ul>
-                        
                         <h3>5. Seus Direitos</h3>
                         <p>Você tem o direito de:</p>
                         <ul>
@@ -412,34 +414,26 @@
                             <li><strong>Alterar sua senha:</strong> O aplicativo permite que você altere sua senha a qualquer momento.</li>
                             <li><strong>Solicitar a exclusão da sua conta:</strong> Entre em contato com um administrador para solicitar a remoção completa dos seus dados do sistema.</li>
                         </ul>
-                        
                         <h3>6. Alterações a esta Política de Privacidade</h3>
                         <p>Podemos atualizar esta Política de Privacidade periodicamente. Notificaremos sobre quaisquer alterações publicando a nova política nesta página.</p>
-                        
                         <h3>7. Contato</h3>
                         <p>Se tiver alguma dúvida sobre esta Política de Privacidade, entre em contato com os administradores do Vôlei da Vila.</p>
                     </div>
                 </div>
             </div>
             
-            <!-- NOVA ABA: Log -->
             <div id="log" class="tab-content hidden">
                 <div class="bg-gray-800 bg-opacity-50 rounded-2xl p-8 border border-gray-700">
                     <h2 class="text-5xl font-brand font-bold text-center mb-6 text-amber-400">REGISTRO DE ATIVIDADES</h2>
-                    <div id="log-list" class="space-y-3 max-h-[600px] overflow-y-auto pr-2">
-                        <!-- Entradas de log serão inseridas aqui pelo JavaScript -->
-                    </div>
+                    <div id="log-list" class="space-y-3 max-h-[600px] overflow-y-auto pr-2"></div>
                 </div>
             </div>
-
-
         </main>
         <footer class="text-center p-4 mt-8 text-gray-400 text-base">
             Copyright 2025 Bruno Sampaio
         </footer>
     </div>
 
-    <!-- NOVO: Modal para Zoom de Imagem -->
     <div id="image-zoom-modal" class="modal fixed inset-0 bg-black bg-opacity-80 items-center justify-center z-[100] p-4 cursor-pointer">
         <img id="zoomed-image" src="" alt="Imagem ampliada" class="max-w-[90vw] max-h-[90vh] rounded-lg shadow-2xl">
     </div>
@@ -448,15 +442,52 @@
     <div id="presence-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl p-8 w-full max-w-md space-y-4 border border-gray-600 text-center"><h2 id="modal-title" class="text-3xl font-brand text-amber-400">Confirmar Presença</h2><p id="modal-confirm-text" class="text-lg text-gray-200"></p><div class="flex gap-4"><button id="confirm-presence-button" class="w-full py-3 font-bold bg-green-600 rounded-lg hover:bg-green-700">CONFIRMAR</button><button id="cancel-presence-button" class="w-full py-3 font-bold bg-gray-600 rounded-lg hover:bg-gray-500">CANCELAR</button></div></div></div>
     <div id="message-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl p-8 w-full max-w-md space-y-4 text-center border border-gray-600"><h2 id="message-title" class="text-3xl font-brand text-amber-400">Aviso</h2><p id="message-text" class="text-lg text-gray-200"></p><button id="message-ok-button" class="px-8 py-2 font-bold bg-amber-400 text-gray-900 rounded-lg hover:bg-amber-500">OK</button></div></div></div>
     <div id="unconfirm-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl p-8 w-full max-w-md space-y-4 text-center border border-gray-600"><h2 class="text-3xl font-brand text-amber-400">Remover Presença</h2><p id="unconfirm-modal-text" class="text-lg text-gray-200"></p><div class="flex gap-4"><button id="confirm-unmark-button" class="w-full py-3 font-bold bg-red-600 rounded-lg hover:bg-red-700">SIM, REMOVER</button><button id="cancel-unmark-button" class="w-full py-3 font-bold bg-gray-600 rounded-lg hover:bg-gray-500">CANCELAR</button></div></div></div>
-    <div id="admin-action-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl p-8 w-full max-w-md space-y-4 text-center border border-gray-600"><h2 id="admin-action-title" class="text-3xl font-brand text-amber-400">Ação de Administrador</h2><p id="admin-action-text" class="text-lg text-gray-200"></p><div class="flex flex-col gap-4"><button id="admin-action-remove-button" class="w-full py-3 font-bold bg-red-600 rounded-lg hover:bg-red-700">Remover Presença</button><button id="admin-action-penalty-button" class="w-full py-3 font-bold bg-yellow-600 text-gray-900 rounded-lg hover:bg-yellow-700">Aplicar Penalidade</button><button id="admin-action-cancel-button" class="w-full py-2 font-bold bg-gray-600 rounded-lg hover:bg-gray-500 mt-2">Cancelar</button></div></div></div>
+    <div id="admin-action-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl p-8 w-full max-w-md space-y-4 text-center border border-gray-600"><h2 id="admin-action-title" class="text-3xl font-brand text-amber-400">Ação de Administrador</h2><p id="admin-action-text" class="text-lg text-gray-200"></p><div class="flex flex-col gap-4"><button id="admin-action-view-photo-button" class="w-full py-3 font-bold bg-blue-600 rounded-lg hover:bg-blue-700">Ver Foto</button><button id="admin-action-remove-button" class="w-full py-3 font-bold bg-red-600 rounded-lg hover:bg-red-700">Remover Presença</button><button id="admin-action-penalty-button" class="w-full py-3 font-bold bg-yellow-600 text-gray-900 rounded-lg hover:bg-yellow-700">Aplicar Penalidade</button><button id="admin-action-cancel-button" class="w-full py-2 font-bold bg-gray-600 rounded-lg hover:bg-gray-500 mt-2">Cancelar</button></div></div></div>
     <div id="penalty-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl p-8 w-full max-w-md space-y-4 text-center border border-gray-600"><h2 id="penalty-title" class="text-3xl font-brand text-yellow-500">Aplicar Penalidade</h2><p id="penalty-text" class="text-lg text-gray-200"></p><div class="flex flex-col gap-4"><button data-penalty="7" class="penalty-duration-button w-full py-3 font-bold bg-yellow-600 text-gray-900 rounded-lg">1 Semana</button><button data-penalty="30" class="penalty-duration-button w-full py-3 font-bold bg-orange-600 text-gray-900 rounded-lg">1 Mês</button><button id="penalty-cancel-button" class="w-full py-2 font-bold bg-gray-600 rounded-lg hover:bg-gray-500 mt-2">Cancelar</button></div></div></div>
     <div id="delete-user-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl p-8 w-full max-w-md space-y-4 text-center border border-gray-600"><h2 class="text-3xl font-brand text-red-500">Excluir Jogador</h2><p id="delete-user-text" class="text-lg text-gray-200"></p><div class="flex gap-4"><button id="confirm-delete-user-button" class="w-full py-3 font-bold bg-red-600 rounded-lg hover:bg-red-700">SIM, EXCLUIR</button><button id="cancel-delete-user-button" class="w-full py-3 font-bold bg-gray-600 rounded-lg hover:bg-gray-500">CANCELAR</button></div></div></div>
     <div id="delete-presences-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl p-8 w-full max-w-md space-y-4 text-center border border-gray-600"><h2 class="text-3xl font-brand text-red-500">Excluir Presenças</h2><p id="delete-presences-text" class="text-lg text-gray-200"></p><div class="flex gap-4"><button id="confirm-delete-presences-button" class="w-full py-3 font-bold bg-red-600 rounded-lg hover:bg-red-700">SIM, EXCLUIR TUDO</button><button id="cancel-delete-presences-button" class="w-full py-3 font-bold bg-gray-600 rounded-lg hover:bg-gray-500">CANCELAR</button></div></div></div>
-    <div id="edit-user-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl p-8 w-full max-w-md space-y-4 border border-gray-600"><h2 id="edit-user-title" class="text-3xl font-brand text-amber-400">Editar Jogador</h2><form id="edit-user-form" class="space-y-4"><div><label for="edit-password" class="text-xl text-gray-300">Nova Senha (deixe em branco)</label><input type="password" id="edit-password" name="edit-password" class="mt-2 w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white"></div><div><label for="edit-user-role" class="text-xl text-gray-300">Perfil</label><select id="edit-user-role" name="edit-user-role" class="mt-2 w-full px-4 py-3 bg-gray-700 rounded-lg text-white"><option value="padrão">Padrão</option><option value="administrador">Administrador</option></select></div><div class="flex gap-4 pt-4"><button type="submit" class="w-full py-3 font-bold bg-blue-600 hover:bg-blue-700 rounded-lg">GUARDAR</button><button type="button" id="cancel-edit-user-button" class="w-full py-3 font-bold bg-gray-600 rounded-lg">CANCELAR</button></div></form></div></div>
+    <div id="edit-user-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl p-8 w-full max-w-md space-y-4 border border-gray-600"><h2 id="edit-user-title" class="text-3xl font-brand text-amber-400">Editar Jogador</h2><form id="edit-user-form" class="space-y-4"><div><label for="edit-password" class="text-xl text-gray-300">Nova Senha (deixe em branco)</label><input type="password" id="edit-password" name="edit-password" class="mt-2 w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white"></div><div><label for="edit-photo-url" class="text-xl text-gray-300">URL da Foto</label><input type="url" id="edit-photo-url" name="edit-photo-url" class="mt-2 w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white"></div><div><label for="edit-user-role" class="text-xl text-gray-300">Perfil</label><select id="edit-user-role" name="edit-user-role" class="mt-2 w-full px-4 py-3 bg-gray-700 rounded-lg text-white"><option value="padrão">Padrão</option><option value="administrador">Administrador</option></select></div><div class="flex gap-4 pt-4"><button type="submit" class="w-full py-3 font-bold bg-blue-600 hover:bg-blue-700 rounded-lg">GUARDAR</button><button type="button" id="cancel-edit-user-button" class="w-full py-3 font-bold bg-gray-600 rounded-lg">CANCELAR</button></div></form></div></div>
     <div id="change-password-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl p-8 w-full max-w-md space-y-4 border border-gray-600"><h2 class="text-3xl font-brand text-amber-400 text-center">Alterar Senha</h2><form id="change-password-form" class="space-y-4"><div><label for="current-password" class="text-xl text-gray-300">Senha Atual</label><input type="password" id="current-password" name="current-password" class="mt-2 w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white" required></div><div><label for="new-user-password" class="text-xl text-gray-300">Nova Senha</label><input type="password" id="new-user-password" name="new-user-password" class="mt-2 w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white" required></div><div><label for="confirm-new-password" class="text-xl text-gray-300">Confirmar Nova Senha</label><input type="password" id="confirm-new-password" name="confirm-new-password" class="mt-2 w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white" required></div><div class="flex gap-4 pt-4"><button type="submit" class="w-full py-3 font-bold bg-amber-400 text-gray-900 hover:bg-amber-500 rounded-lg">GUARDAR ALTERAÇÕES</button><button type="button" id="cancel-change-password-button" class="w-full py-3 font-bold bg-gray-600 rounded-lg">CANCELAR</button></div></form></div></div>
     <div id="guest-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl p-8 w-full max-w-md space-y-4 border border-gray-600"><h2 class="text-3xl font-brand text-sky-400 text-center">Adicionar Convidado</h2><form id="guest-form" class="space-y-4"><div><label for="guest-name" class="text-xl text-gray-300">Nome do Convidado</label><input type="text" id="guest-name" name="guest-name" class="mt-2 w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white" required></div><div class="flex gap-4 pt-4"><button type="submit" class="w-full py-3 font-bold bg-sky-500 hover:bg-sky-600 rounded-lg">CONFIRMAR CONVIDADO</button><button type="button" id="cancel-guest-button" class="w-full py-3 font-bold bg-gray-600 rounded-lg">CANCELAR</button></div></form></div></div>
     
-    <!-- NOVO: Modal para Mover Jogador da Lista de Espera -->
+    <!-- MODAL DE OBSERVAÇÃO -->
+    <div id="observation-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4">
+        <div class="bg-gray-800 rounded-2xl p-8 w-full max-w-md space-y-4 border border-gray-600">
+            <h2 class="text-3xl font-brand text-amber-400 text-center">Adicionar Observação</h2>
+            <p class="text-gray-300 text-center">Se desejar, adicione uma observação (ex: "Vou chegar atrasado").</p>
+            <form id="observation-form" class="space-y-4">
+                <div>
+                    <label for="observation-text" class="sr-only">Observação</label>
+                    <textarea id="observation-text" name="observation-text" rows="3" class="mt-2 w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white" placeholder="Escreva aqui..."></textarea>
+                </div>
+                <div class="flex gap-4 pt-4">
+                    <button type="submit" class="w-full py-3 font-bold bg-green-600 hover:bg-green-700 rounded-lg">GUARDAR E CONFIRMAR</button>
+                    <button type="button" id="skip-observation-button" class="w-full py-3 font-bold bg-gray-600 rounded-lg">CONFIRMAR SEM OBS.</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- MODAL PARA VER OBSERVAÇÃO -->
+    <div id="view-observation-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4">
+        <div class="bg-gray-800 rounded-2xl p-8 w-full max-w-md space-y-4 text-center border border-gray-600">
+            <h2 id="view-observation-title" class="text-3xl font-brand text-amber-400">Observação do Jogador</h2>
+            <p id="view-observation-text" class="text-lg text-gray-200 bg-gray-700 p-4 rounded-lg whitespace-pre-wrap text-left"></p>
+            <button id="view-observation-ok-button" class="px-8 py-2 font-bold bg-amber-400 text-gray-900 rounded-lg hover:bg-amber-500">OK</button>
+        </div>
+    </div>
+
+    <!-- MODAL FOTO DO JOGADOR (NOVO) -->
+    <div id="player-photo-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-[60] p-4">
+        <div class="bg-gray-800 rounded-2xl p-6 w-full max-w-xs space-y-4 text-center border border-gray-600 relative">
+            <button id="close-player-photo-button" class="absolute top-2 right-3 text-gray-400 hover:text-white">&times;</button>
+            <img id="player-photo-img" src="" alt="Foto do Jogador" class="w-40 h-40 rounded-full mx-auto border-4 border-amber-400 object-cover bg-gray-700">
+            <h2 id="player-photo-name" class="text-4xl font-brand text-amber-400"></h2>
+            <button id="photo-modal-unconfirm-btn" class="hidden w-full py-2 font-bold bg-red-600 rounded-lg hover:bg-red-700 mt-2">REMOVER PRESENÇA</button>
+        </div>
+    </div>
+
+    <!-- Modal para Mover Jogador da Lista de Espera -->
     <div id="move-player-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4">
         <div class="bg-gray-800 rounded-2xl p-8 w-full max-w-md space-y-4 border border-gray-600">
             <h2 id="move-player-title" class="text-3xl font-brand text-cyan-400 text-center">Mover Jogador</h2>
@@ -473,7 +504,7 @@
     </div>
 
 
-    <!-- MODAIS DE RELATÓRIO ADICIONADOS -->
+    <!-- MODAIS DE RELATÓRIO -->
     <div id="report-date-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4">
         <div class="bg-gray-800 rounded-2xl p-8 w-full max-w-md space-y-4 border border-gray-600">
             <h2 class="text-3xl font-brand text-green-400 text-center">Gerar Relatório de Presença</h2>
@@ -557,6 +588,7 @@
             const adminActionModal = document.getElementById('admin-action-modal');
             const adminActionTitle = document.getElementById('admin-action-title');
             const adminActionText = document.getElementById('admin-action-text');
+            const adminActionViewPhotoButton = document.getElementById('admin-action-view-photo-button');
             const adminActionRemoveBtn = document.getElementById('admin-action-remove-button');
             const adminActionPenaltyBtn = document.getElementById('admin-action-penalty-button');
             const adminActionCancelBtn = document.getElementById('admin-action-cancel-button');
@@ -617,17 +649,31 @@
             const cancelMovePlayerButton = document.getElementById('cancel-move-player-button');
             // Elementos do Log
             const logList = document.getElementById('log-list');
-            // NOVO: Elementos do Zoom de Imagem
             const albumContainer = document.getElementById('album');
             const imageZoomModal = document.getElementById('image-zoom-modal');
             const zoomedImage = document.getElementById('zoomed-image');
+            // Elementos do Modal de Observação
+            const observationModal = document.getElementById('observation-modal');
+            const observationForm = document.getElementById('observation-form');
+            const observationText = document.getElementById('observation-text');
+            const skipObservationButton = document.getElementById('skip-observation-button');
+            const viewObservationModal = document.getElementById('view-observation-modal');
+            const viewObservationTitle = document.getElementById('view-observation-title');
+            const viewObservationText = document.getElementById('view-observation-text');
+            const viewObservationOkButton = document.getElementById('view-observation-ok-button');
+            // Elementos do Modal de Foto do Jogador
+            const playerPhotoModal = document.getElementById('player-photo-modal');
+            const playerPhotoImg = document.getElementById('player-photo-img');
+            const playerPhotoName = document.getElementById('player-photo-name');
+            const closePlayerPhotoButton = document.getElementById('close-player-photo-button');
+            const photoModalUnconfirmBtn = document.getElementById('photo-modal-unconfirm-btn');
 
             let currentSlotData = null; 
             let selectedPlayerForAction = null;
             let playerToMove = null;
             let userToEditId = null;
             let userToDeleteId = null;
-            let userToDeleteName = null; // Para log
+            let userToDeleteName = null;
 
             // --- FUNÇÕES DE LOG ---
             async function logAction(description) {
@@ -648,13 +694,8 @@
                 try {
                     const q = query(collection(db, "logs"));
                     const querySnapshot = await getDocs(q);
-                    
                     const logs = [];
-                    querySnapshot.forEach((doc) => {
-                        logs.push(doc.data());
-                    });
-
-                    // Ordena os logs por data, do mais recente para o mais antigo
+                    querySnapshot.forEach((doc) => logs.push(doc.data()));
                     logs.sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
 
                     if (logs.length === 0) {
@@ -672,13 +713,11 @@
                             </div>
                         `;
                     }).join('');
-
                 } catch (error) {
                     console.error("Erro ao carregar logs: ", error);
                     logList.innerHTML = '<p class="text-center text-red-500">Falha ao carregar os registos.</p>';
                 }
             }
-
 
             // --- FUNÇÕES GERAIS ---
             function showMessage(title, text) {
@@ -686,12 +725,25 @@
                 messageText.textContent = text;
                 messageModal.classList.add('flex');
             }
+
+            function getFormattedDateWithTime(dateString) {
+                const dateObj = new Date(dateString + 'T00:00:00');
+                const dayOfWeek = dateObj.getDay(); 
+                const datePart = dateObj.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+                let timePart = '';
+                if (dayOfWeek === 2 || dayOfWeek === 4) { 
+                    timePart = 'das 20:00 as 21:00';
+                } else if (dayOfWeek === 6) {
+                    timePart = 'das 15:00 as 18:00';
+                }
+                return `${datePart}${timePart ? `, ${timePart}` : ''}`;
+            }
             
             function updatePresenceViewForRole(role, activeDate, isPaused, isWaitingListActive) {
                 playerDateDisplay.classList.add('hidden');
                 adminDateSelector.classList.add('hidden');
                 presenceListContainer.classList.add('hidden');
-                waitingListContainer.classList.add('hidden'); // Esconde a lista de espera por defeito
+                waitingListContainer.classList.add('hidden');
                 
                 if (role === 'administrador') {
                     adminDateSelector.classList.add('flex');
@@ -702,7 +754,7 @@
                         pauseDateButton.textContent = isPaused ? 'Retomar Marcações' : 'Pausar Marcações';
                         renderSlotsForDate(activeDate, isPaused);
                         if (isWaitingListActive) {
-                            renderWaitingList(activeDate, isPaused);
+                            renderWaitingList(activeDate); 
                             waitingListContainer.classList.remove('hidden');
                         }
                     } else {
@@ -711,13 +763,12 @@
                 } else {
                     playerDateDisplay.classList.remove('hidden');
                     if (activeDate) {
-                        const dateObj = new Date(activeDate + 'T00:00:00');
-                        const formattedDate = dateObj.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+                        const fullFormattedDate = getFormattedDateWithTime(activeDate);
                         let statusText = isPaused ? '<span class="font-bold text-yellow-500">(Marcações Pausadas)</span>' : '';
-                        playerDateDisplay.innerHTML = `<p class="text-2xl">Data ativa: <span class="font-bold text-amber-400">${formattedDate}</span> ${statusText}</p>`;
+                        playerDateDisplay.innerHTML = `<p class="text-2xl">Data ativa: <span class="font-bold text-amber-400">${fullFormattedDate}</span> ${statusText}</p>`;
                         renderSlotsForDate(activeDate, isPaused);
                         if (isWaitingListActive) {
-                            renderWaitingList(activeDate, isPaused);
+                            renderWaitingList(activeDate);
                             waitingListContainer.classList.remove('hidden');
                         }
                     } else {
@@ -735,9 +786,7 @@
                         numero_vagas: 24,
                         lista_espera_ativa: false 
                     };
-                    
                     totalSlots = settings.numero_vagas || 24;
-
                     const userRole = sessionStorage.getItem('userRole');
                     if (userRole) {
                         updatePresenceViewForRole(userRole, settings.data_ativa, settings.marcacoes_pausadas, settings.lista_espera_ativa);
@@ -749,27 +798,22 @@
                     }
                 } catch (error) {
                     console.error("Erro ao atualizar a UI: ", error);
-                    showMessage("Erro de Conexão", "Não foi possível carregar os dados. Verifique a sua ligação à internet e as configurações do Firebase.");
+                    showMessage("Erro de Conexão", "Não foi possível carregar os dados. Verifique a sua ligação à internet.");
                 }
             }
             
-            // --- LÓGICA DE GESTÃO DE UTILIZADORES ---
+            // --- GESTÃO DE UTILIZADORES ---
             async function renderUserList() {
                 userList.innerHTML = '<p class="text-center">A carregar jogadores...</p>';
                 try {
-                    const q = query(collection(db, "jogadores"));
-                    const querySnapshot = await getDocs(q);
+                    const querySnapshot = await getDocs(query(collection(db, "jogadores")));
                     userList.innerHTML = '';
-                    
                     const users = [];
-                    querySnapshot.forEach((doc) => {
-                        users.push({ id: doc.id, ...doc.data() });
-                    });
+                    querySnapshot.forEach((doc) => users.push({ id: doc.id, ...doc.data() }));
 
                     users.sort((a, b) => a.nome_exibicao.localeCompare(b.nome_exibicao)).forEach(user => {
                         const penaltyInfo = user.penalidade_ate ? `<p class="text-xs text-red-400">Penalizado até ${new Date(user.penalidade_ate + 'T00:00:00').toLocaleDateString('pt-BR')}</p>` : '';
                         const removePenaltyButton = user.penalidade_ate ? `<button data-userid="${user.id}" data-username="${user.nome_exibicao}" class="remove-penalty-btn bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-sm">Remover Penalidade</button>` : '';
-                        
                         const isBlocked = user.bloqueado_inatividade === true;
                         const blockedInfo = isBlocked ? `<p class="text-xs text-red-500 font-bold">LOGIN BLOQUEADO</p>` : '';
                         const unblockButton = isBlocked ? `<button data-userid="${user.id}" data-username="${user.nome_exibicao}" class="unblock-user-btn bg-teal-500 hover:bg-teal-600 text-white font-bold py-1 px-3 rounded text-sm">Desbloquear</button>` : '';
@@ -780,22 +824,19 @@
                             <div>
                                 <p class="font-bold text-white text-lg">${user.nome_exibicao}</p>
                                 <p class="text-sm text-amber-400 capitalize">${user.perfil}</p>
-                                ${penaltyInfo}
-                                ${blockedInfo}
+                                ${penaltyInfo} ${blockedInfo}
                             </div>
                             <div class="flex flex-col sm:flex-row gap-2 items-end">
-                                ${unblockButton}
-                                ${removePenaltyButton}
-                                <button data-userid="${user.id}" data-username="${user.nome_exibicao}" data-userrole="${user.perfil}" class="edit-user-btn bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded text-sm">Editar</button>
+                                ${unblockButton} ${removePenaltyButton}
+                                <button data-userid="${user.id}" data-username="${user.nome_exibicao}" data-userrole="${user.perfil}" data-photourl="${user.photo_url || ''}" class="edit-user-btn bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded text-sm">Editar</button>
                                 <button data-userid="${user.id}" data-username="${user.nome_exibicao}" class="delete-user-btn bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded text-sm">Excluir</button>
-                            </div>
-                        `;
+                            </div>`;
                         userList.appendChild(userEl);
                         if (user.nome_exibicao === sessionStorage.getItem('loggedInUser')) {
-                            userEl.querySelector('.edit-user-btn').disabled = true;
-                            userEl.querySelector('.delete-user-btn').disabled = true;
-                            userEl.querySelector('.edit-user-btn').classList.add('opacity-50', 'cursor-not-allowed');
-                            userEl.querySelector('.delete-user-btn').classList.add('opacity-50', 'cursor-not-allowed');
+                            userEl.querySelectorAll('.edit-user-btn, .delete-user-btn').forEach(btn => {
+                                btn.disabled = true;
+                                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                            });
                         }
                     });
                 } catch (error) {
@@ -806,16 +847,11 @@
 
             async function handleUnblockUser(userId, userName) {
                 try {
-                    const userRef = doc(db, "jogadores", userId);
-                    await updateDoc(userRef, {
-                        bloqueado_inatividade: false,
-                        ultimo_login: new Date().toISOString().split('T')[0]
-                    });
+                    await updateDoc(doc(db, "jogadores", userId), { bloqueado_inatividade: false, ultimo_login: new Date().toISOString().split('T')[0] });
                     logAction(`Desbloqueou o jogador ${userName} por inatividade.`);
                     showMessage('Sucesso', 'O jogador foi desbloqueado.');
                     renderUserList();
                 } catch (error) {
-                    console.error("Erro ao desbloquear utilizador: ", error);
                     showMessage("Erro", "Não foi possível desbloquear o jogador.");
                 }
             }
@@ -824,29 +860,27 @@
                 e.preventDefault();
                 const newPassword = editUserForm['edit-password'].value;
                 const newRole = editUserForm['edit-user-role'].value;
+                let newPhotoUrl = editUserForm['edit-photo-url'].value.trim();
                 
                 try {
                     const userRef = doc(db, "jogadores", userToEditId);
                     const userDoc = await getDoc(userRef);
-                    const userName = userDoc.exists() ? userDoc.data().nome_exibicao : `ID ${userToEditId}`;
-
-                    const updateData = { perfil: newRole };
-                    let logMessage = `Alterou o perfil de ${userName} para ${newRole}.`;
-
-                    if (newPassword) {
-                        updateData.senha = newPassword;
-                        logMessage += ` E redefiniu a senha.`;
-                    }
+                    const userName = userDoc.exists() ? userDoc.data().nome_exibicao : '';
                     
+                    if (!newPhotoUrl && userName) {
+                        newPhotoUrl = `https://placehold.co/400x400/FBBF24/001f3f?text=${userName.charAt(0)}`;
+                    }
+
+                    const updateData = { perfil: newRole, photo_url: newPhotoUrl };
+                    if (newPassword) updateData.senha = newPassword;
                     await updateDoc(userRef, updateData);
-                    logAction(logMessage);
+                    
+                    logAction(`Editou os dados do jogador ${userName}.`);
                     
                     showMessage('Sucesso', 'Dados do jogador atualizados.');
                     editUserModal.classList.remove('flex');
-                    userToEditId = null;
                     renderUserList();
                 } catch (error) {
-                    console.error("Erro ao guardar alterações do utilizador: ", error);
                     showMessage("Erro", "Não foi possível guardar as alterações.");
                 }
             }
@@ -857,44 +891,24 @@
                 const newPassword = changePasswordForm['new-user-password'].value;
                 const confirmPassword = changePasswordForm['confirm-new-password'].value;
 
-                if (newPassword !== confirmPassword) {
-                    showMessage("Erro", "As novas senhas não coincidem.");
-                    return;
-                }
-
-                if (newPassword.length < 4) {
-                    showMessage("Erro", "A nova senha deve ter pelo menos 4 caracteres.");
-                    return;
-                }
+                if (newPassword !== confirmPassword) return showMessage("Erro", "As novas senhas não coincidem.");
+                if (newPassword.length < 4) return showMessage("Erro", "A nova senha deve ter pelo menos 4 caracteres.");
 
                 const userId = sessionStorage.getItem('loggedInUserId');
-                if (!userId) {
-                    showMessage("Erro", "Sessão inválida. Por favor, faça o login novamente.");
-                    return;
-                }
+                if (!userId) return showMessage("Erro", "Sessão inválida. Por favor, faça o login novamente.");
 
                 try {
                     const userRef = doc(db, "jogadores", userId);
                     const userDoc = await getDoc(userRef);
-
-                    if (userDoc.exists()) {
-                        const userData = userDoc.data();
-                        if (userData.senha !== currentPassword) {
-                            showMessage("Erro", "A senha atual está incorreta.");
-                            return;
-                        }
-
+                    if (userDoc.exists() && userDoc.data().senha === currentPassword) {
                         await updateDoc(userRef, { senha: newPassword });
                         logAction(`Alterou a própria senha.`);
                         showMessage("Sucesso", "Senha alterada com sucesso!");
                         changePasswordModal.classList.remove('flex');
-                        changePasswordForm.reset();
-
                     } else {
-                        showMessage("Erro", "Utilizador não encontrado.");
+                        showMessage("Erro", "A senha atual está incorreta ou o utilizador não foi encontrado.");
                     }
                 } catch (error) {
-                    console.error("Erro ao alterar a senha: ", error);
                     showMessage("Erro", "Não foi possível alterar a sua senha. Tente novamente.");
                 }
             }
@@ -905,69 +919,56 @@
                     logAction(`Excluiu o jogador ${userToDeleteName}.`);
                     showMessage('Sucesso', 'Jogador excluído do sistema.');
                     deleteUserModal.classList.remove('flex');
-                    userToDeleteId = null;
-                    userToDeleteName = null;
                     renderUserList();
                 } catch (error) {
-                    console.error("Erro ao excluir utilizador: ", error);
                     showMessage("Erro", "Não foi possível excluir o jogador.");
                 }
             }
 
             async function handleRemovePenalty(userId, userName) {
                 try {
-                    const userRef = doc(db, "jogadores", userId);
-                    await updateDoc(userRef, { penalidade_ate: null });
+                    await updateDoc(doc(db, "jogadores", userId), { penalidade_ate: null });
                     logAction(`Removeu a penalidade do jogador ${userName}.`);
                     showMessage('Sucesso', 'A penalidade do jogador foi removida.');
                     renderUserList();
                 } catch (error) {
-                    console.error("Erro ao remover penalidade: ", error);
                     showMessage("Erro", "Não foi possível remover a penalidade.");
                 }
             }
             
-            // --- LÓGICA DE PRESENÇA, CONVIDADO E PENALIDADE ---
+            // --- LÓGICA DE PRESENÇA ---
             async function renderSlotsForDate(dateString, isPaused) {
                 presenceListContainer.classList.remove('hidden');
-                const dateObj = new Date(dateString + 'T00:00:00');
-                const formattedDate = dateObj.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
-                selectedDateTitle.textContent = `Presença para ${formattedDate}`;
-
-                presenceSlots.innerHTML = '<p class="col-span-full text-center">A carregar presenças...</p>';
+                selectedDateTitle.textContent = `Presença para ${getFormattedDateWithTime(dateString)}`;
+                presenceSlots.innerHTML = '<p class="col-span-full text-center">A carregar...</p>';
+                
                 const loggedInUserId = sessionStorage.getItem('loggedInUserId');
                 const userRole = sessionStorage.getItem('userRole');
                 
                 try {
                     const playersSnapshot = await getDocs(collection(db, "jogadores"));
                     const playersMap = new Map();
-                    playersSnapshot.forEach(doc => {
-                        playersMap.set(doc.id, doc.data().nome_exibicao);
+                    playersSnapshot.forEach(d => {
+                        const data = d.data();
+                        playersMap.set(d.id, {
+                            name: data.nome_exibicao,
+                            photoUrl: data.photo_url || `https://placehold.co/400x400/FBBF24/001f3f?text=${data.nome_exibicao.charAt(0)}`
+                        });
                     });
 
-                    const q = query(collection(db, "presencas"), where("data_jogo", "==", dateString));
-                    const presenceSnapshot = await getDocs(q);
-
+                    const presenceSnapshot = await getDocs(query(collection(db, "presencas"), where("data_jogo", "==", dateString)));
                     const presences = {};
-                    presenceSnapshot.forEach(doc => {
-                        const data = doc.data();
-                        const playerName = data.tipo === 'convidado' ? data.nome_convidado : playersMap.get(data.jogador_id);
-                        if (playerName) {
-                            presences[data.numero_vaga] = {
-                                playerName: playerName,
-                                playerId: data.jogador_id,
-                                docId: doc.id,
-                                type: data.tipo || 'jogador'
-                            };
-                        }
+                    presenceSnapshot.forEach(d => {
+                        const data = d.data();
+                        const playerData = playersMap.get(data.jogador_id);
+                        const playerName = data.tipo === 'convidado' ? data.nome_convidado : (playerData ? playerData.name : 'Desconhecido');
+                        const playerPhoto = data.tipo === 'convidado' ? `https://placehold.co/400x400/38bdf8/001f3f?text=C` : (playerData ? playerData.photoUrl : '');
+
+                        if (playerName) presences[data.numero_vaga] = { playerName, playerId: data.jogador_id, docId: d.id, type: data.tipo || 'jogador', observation: data.observacao || '', photoUrl: playerPhoto };
                     });
                     
                     presenceSlots.innerHTML = '';
-                    if(userRole === 'administrador' && !isPaused) {
-                        presenceSlots.classList.add('admin-view');
-                    } else {
-                        presenceSlots.classList.remove('admin-view');
-                    }
+                    presenceSlots.classList.toggle('admin-view', userRole === 'administrador');
 
                     let userHasPresence = false;
                     for (let i = 0; i < totalSlots; i++) {
@@ -986,20 +987,21 @@
                                 slotEl.dataset.playerName = presenceData.playerName;
                                 slotEl.dataset.playerId = presenceData.playerId;
                                 slotEl.dataset.type = presenceData.type;
+                                slotEl.dataset.photoUrl = presenceData.photoUrl;
                                 
                                 if (presenceData.playerId === loggedInUserId) {
-                                    if (presenceData.type === 'convidado') {
-                                        slotEl.classList.add('slot-guest-mine');
-                                    } else {
-                                        slotEl.classList.add('slot-mine');
-                                        userHasPresence = true;
-                                    }
+                                    slotEl.classList.add(presenceData.type === 'convidado' ? 'slot-guest-mine' : 'slot-mine');
+                                    if (presenceData.type !== 'convidado') userHasPresence = true;
                                 } else {
-                                     if (presenceData.type === 'convidado') {
-                                        slotEl.classList.add('slot-guest');
-                                    } else {
-                                        slotEl.classList.add('slot-taken');
-                                    }
+                                    slotEl.classList.add(presenceData.type === 'convidado' ? 'slot-guest' : 'slot-taken');
+                                }
+                                if (presenceData.observation && userRole === 'administrador') {
+                                    const icon = document.createElement('div');
+                                    icon.className = 'observation-icon';
+                                    icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M7.005 3.1a1 1 0 1 1 1.99 0l-.388 6.35a.61.61 0 0 1-1.214 0zM7 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0"/></svg>`;
+                                    icon.dataset.observation = presenceData.observation;
+                                    icon.dataset.playerName = presenceData.playerName;
+                                    slotEl.appendChild(icon);
                                 }
                             } else {
                                 slotEl.textContent = `#${i + 1}`;
@@ -1018,38 +1020,63 @@
             }
 
             async function handleSlotClick(event) {
-                try {
-                    const configDoc = await getDoc(doc(db, "configuracoes", "global"));
-                    if (configDoc.exists() && configDoc.data().marcacoes_pausadas) return;
+                const iconTarget = event.target.closest('.observation-icon');
+                if (iconTarget) {
+                    viewObservationTitle.textContent = `Observação de ${iconTarget.dataset.playerName}`;
+                    viewObservationText.textContent = iconTarget.dataset.observation;
+                    viewObservationModal.classList.add('flex');
+                    return;
+                }
 
-                    const target = event.target.closest('.slot');
-                    if (!target) return;
+                const target = event.target.closest('.slot');
+                if (!target) return;
 
-                    const slot = target.dataset.slot;
-                    const docId = target.dataset.docId;
-                    const playerName = target.dataset.playerName;
-                    const playerId = target.dataset.playerId;
-                    const type = target.dataset.type;
-                    const userRole = sessionStorage.getItem('userRole');
+                const configDoc = await getDoc(doc(db, "configuracoes", "global"));
+                if (configDoc.exists() && configDoc.data().marcacoes_pausadas) return;
 
-                    currentSlotData = { slot, docId, playerName, playerId, type, list: 'presence' };
+                // Populate currentSlotData for all cases except free slot
+                if (!target.classList.contains('slot-free')) {
+                    currentSlotData = {
+                        slot: target.dataset.slot,
+                        docId: target.dataset.docId,
+                        playerName: target.dataset.playerName,
+                        playerId: target.dataset.playerId,
+                        type: target.dataset.type,
+                        list: 'presence', // Assuming this is only for presence list clicks for now
+                        photoUrl: target.dataset.photoUrl
+                    };
+                    selectedPlayerForAction = { name: currentSlotData.playerName, id: currentSlotData.playerId, type: currentSlotData.type };
+                }
 
-                    if (target.classList.contains('slot-free')) { 
-                        const loggedInUser = sessionStorage.getItem('loggedInUser');
-                        modalTitle.textContent = `Confirmar Vaga #${parseInt(slot) + 1}`;
-                        modalConfirmText.textContent = `Confirma a presença para ${loggedInUser}?`;
-                        confirmBtn.onclick = handleConfirmPresence; 
-                        presenceModal.classList.add('flex');
-                    } else if (target.classList.contains('slot-mine') || target.classList.contains('slot-guest-mine')) {
-                         unconfirmModalText.textContent = `Tem a certeza de que deseja remover a presença de ${playerName}?`;
-                         unconfirmModal.classList.add('flex');
-                    } else if (userRole === 'administrador') {
-                        selectedPlayerForAction = { name: playerName, id: playerId, type: type };
-                        adminActionText.textContent = `Escolha uma ação para ${playerName}:`;
-                        adminActionModal.classList.add('flex');
-                    }
-                } catch (error) {
-                    console.error("ERRO CRÍTICO AO CLICAR NA VAGA:", error);
+                const userRole = sessionStorage.getItem('userRole');
+                const isMySlot = target.classList.contains('slot-mine') || target.classList.contains('slot-guest-mine');
+
+                // Case 1: Admin clicking an occupied slot
+                if (userRole === 'administrador' && !target.classList.contains('slot-free')) {
+                    adminActionText.textContent = `Escolha uma ação para ${currentSlotData.playerName}:`;
+                    adminActionModal.classList.add('flex');
+                    return;
+                }
+
+                // Case 2: Any user clicking a free slot
+                if (target.classList.contains('slot-free')) {
+                    currentSlotData = { slot: target.dataset.slot }; // Set only the necessary part
+                    modalTitle.textContent = `Confirmar Vaga #${parseInt(target.dataset.slot) + 1}`;
+                    modalConfirmText.textContent = `Confirma a presença para ${sessionStorage.getItem('loggedInUser')}?`;
+                    confirmBtn.onclick = handleConfirmPresence;
+                    presenceModal.classList.add('flex');
+                    return;
+                }
+
+                // Case 3: Non-admin clicking any occupied slot (theirs or others)
+                if (currentSlotData.playerName && currentSlotData.photoUrl) {
+                    playerPhotoImg.src = currentSlotData.photoUrl;
+                    playerPhotoName.textContent = currentSlotData.playerName;
+                    
+                    // Show/hide the unconfirm button based on whether it's the user's slot
+                    photoModalUnconfirmBtn.classList.toggle('hidden', !isMySlot);
+
+                    playerPhotoModal.classList.add('flex');
                 }
             }
             
@@ -1060,7 +1087,6 @@
                     showMessage('Sucesso', `O número de vagas foi definido para ${count}.`);
                     refreshUI();
                 } catch (error) {
-                    console.error("Erro ao definir número de vagas: ", error);
                     showMessage("Erro", "Não foi possível alterar o número de vagas.");
                 }
             }
@@ -1068,101 +1094,68 @@
             async function handleGuestSubmit(e) {
                 e.preventDefault();
                 const guestName = guestForm['guest-name'].value.trim();
-                if (!guestName) {
-                    showMessage("Erro", "Por favor, insira o nome do convidado.");
-                    return;
-                }
+                if (!guestName) return showMessage("Erro", "Por favor, insira o nome do convidado.");
 
-                const firstFreeSlot = document.querySelector('.slot-free');
+                const firstFreeSlot = document.querySelector('#presence-slots .slot-free');
                 if (!firstFreeSlot) {
-                    showMessage("Erro", "Não há mais vagas disponíveis.");
                     guestModal.classList.remove('flex');
-                    return;
+                    return showMessage("Erro", "Não há mais vagas disponíveis.");
                 }
-
-                const slotNumber = parseInt(firstFreeSlot.dataset.slot);
-                const loggedInUserId = sessionStorage.getItem('loggedInUserId');
-
-                try {
-                    const configRef = doc(db, "configuracoes", "global");
-                    const configDoc = await getDoc(configRef);
-                    if (!configDoc.exists() || !configDoc.data().data_ativa) {
-                        throw new Error("No active date set.");
-                    }
-                    const activeDate = configDoc.data().data_ativa;
-
-                    await addDoc(collection(db, "presencas"), {
-                        data_jogo: activeDate,
-                        jogador_id: loggedInUserId,
-                        numero_vaga: slotNumber,
-                        tipo: 'convidado',
-                        nome_convidado: guestName
-                    });
-                    
-                    logAction(`Adicionou o convidado "${guestName}" na vaga #${slotNumber + 1}.`);
-                    guestModal.classList.remove('flex');
-                    guestForm.reset();
-                    refreshUI();
-
-                } catch(error) {
-                    console.error("Erro ao adicionar convidado:", error);
-                    showMessage("Erro", "Não foi possível adicionar o convidado. Verifique se há uma data ativa.");
-                }
-            }
-
-            async function handleConfirmPresence() {
-                const loggedInUserId = sessionStorage.getItem('loggedInUserId');
-                if (!loggedInUserId) {
-                    showMessage('Erro', 'Utilizador não encontrado. Por favor, faça login novamente.');
-                    presenceModal.classList.remove('flex');
-                    return;
-                }
-
-                presenceModal.classList.remove('flex');
-                confirmBtn.onclick = null;
 
                 try {
                     const configDoc = await getDoc(doc(db, "configuracoes", "global"));
-                    if (!configDoc.exists() || !configDoc.data().data_ativa) {
-                        showMessage('Erro', 'Nenhuma data ativa para marcação. Fale com um administrador.');
-                        return;
-                    }
+                    if (!configDoc.exists() || !configDoc.data().data_ativa) throw new Error("No active date set.");
+
+                    await addDoc(collection(db, "presencas"), {
+                        data_jogo: configDoc.data().data_ativa,
+                        jogador_id: sessionStorage.getItem('loggedInUserId'),
+                        numero_vaga: parseInt(firstFreeSlot.dataset.slot),
+                        tipo: 'convidado',
+                        nome_convidado: guestName,
+                        observacao: ''
+                    });
+                    logAction(`Adicionou o convidado "${guestName}".`);
+                    guestModal.classList.remove('flex');
+                    refreshUI();
+                } catch(error) {
+                    showMessage("Erro", "Não foi possível adicionar o convidado.");
+                }
+            }
+            
+            async function handleConfirmPresence() {
+                presenceModal.classList.remove('flex');
+                confirmBtn.onclick = null;
+                observationForm.reset();
+                observationModal.classList.add('flex');
+            }
+
+            async function handleSavePresenceWithObservation(observation) {
+                observationModal.classList.remove('flex');
+                const loggedInUserId = sessionStorage.getItem('loggedInUserId');
+
+                try {
+                    const configDoc = await getDoc(doc(db, "configuracoes", "global"));
+                    if (!configDoc.exists() || !configDoc.data().data_ativa) return showMessage('Erro', 'Nenhuma data ativa para marcação.');
+                    
                     const activeDate = configDoc.data().data_ativa;
                     const presencasRef = collection(db, "presencas");
 
-                    const qUser = query(presencasRef, where("data_jogo", "==", activeDate), where("jogador_id", "==", loggedInUserId), where("tipo", "==", "jogador"));
-                    const qSlot = query(presencasRef, where("data_jogo", "==", activeDate), where("numero_vaga", "==", parseInt(currentSlotData.slot)));
-
                     const [userSnapshot, slotSnapshot] = await Promise.all([
-                        getDocs(qUser),
-                        getDocs(qSlot)
+                        getDocs(query(presencasRef, where("data_jogo", "==", activeDate), where("jogador_id", "==", loggedInUserId), where("tipo", "==", "jogador"))),
+                        getDocs(query(presencasRef, where("data_jogo", "==", activeDate), where("numero_vaga", "==", parseInt(currentSlotData.slot))))
                     ]);
 
-                    if (!userSnapshot.empty) {
-                        showMessage('Já Confirmado', 'Você já tem presença confirmada para esta data.');
-                        refreshUI();
-                        return;
-                    }
-
+                    if (!userSnapshot.empty) return showMessage('Já Confirmado', 'Você já tem presença confirmada para esta data.');
                     if (!slotSnapshot.empty) {
-                        showMessage('Vaga Ocupada', 'Esta vaga foi ocupada por outro jogador. A lista será atualizada.');
-                        refreshUI();
-                        return;
+                        showMessage('Vaga Ocupada', 'Esta vaga foi ocupada. A lista será atualizada.');
+                        return refreshUI();
                     }
 
-                    await addDoc(presencasRef, {
-                        data_jogo: activeDate,
-                        jogador_id: loggedInUserId,
-                        numero_vaga: parseInt(currentSlotData.slot),
-                        tipo: 'jogador'
-                    });
+                    await addDoc(presencasRef, { data_jogo: activeDate, jogador_id: loggedInUserId, numero_vaga: parseInt(currentSlotData.slot), tipo: 'jogador', observacao: observation });
                     
-                    const slotNumber = parseInt(currentSlotData.slot) + 1;
-                    logAction(`Marcou presença na vaga #${slotNumber}.`);
+                    logAction(`Marcou presença na vaga #${parseInt(currentSlotData.slot) + 1}${observation ? ` com a observação: "${observation}"` : '.'}`);
                     refreshUI();
-
                 } catch (error) {
-                    console.error("ERRO AO CONFIRMAR PRESENÇA:", error);
                     showMessage("Erro", "Não foi possível marcar a presença. Tente novamente.");
                     refreshUI();
                 }
@@ -1170,129 +1163,71 @@
             
             async function handleConfirmUnmark() {
                 if (!currentSlotData || !currentSlotData.docId) return;
-
-                const isMyOwnPlayerSlot = currentSlotData.playerId === sessionStorage.getItem('loggedInUserId') && currentSlotData.type === 'jogador';
                 const collectionName = currentSlotData.list === 'waiting' ? 'lista_espera' : 'presencas';
-
                 try {
                     const batch = writeBatch(db);
-                    const mainDocRef = doc(db, collectionName, currentSlotData.docId);
-                    batch.delete(mainDocRef);
+                    batch.delete(doc(db, collectionName, currentSlotData.docId));
 
-                    if (isMyOwnPlayerSlot && collectionName === 'presencas') {
+                    if (currentSlotData.type === 'jogador' && collectionName === 'presencas') {
                         const configDoc = await getDoc(doc(db, "configuracoes", "global"));
-                        if (configDoc.exists() && configDoc.data().data_ativa) {
-                            const activeDate = configDoc.data().data_ativa;
-                            const qGuests = query(collection(db, "presencas"),
-                                where("data_jogo", "==", activeDate),
-                                where("jogador_id", "==", currentSlotData.playerId),
-                                where("tipo", "==", "convidado"));
-                            
-                            const guestsSnapshot = await getDocs(qGuests);
-                            guestsSnapshot.forEach(guestDoc => {
-                                batch.delete(guestDoc.ref);
-                            });
+                        const activeDate = configDoc.data()?.data_ativa;
+                        if (activeDate) {
+                            const guestsSnapshot = await getDocs(query(collection(db, "presencas"), where("data_jogo", "==", activeDate), where("jogador_id", "==", currentSlotData.playerId), where("tipo", "==", "convidado")));
+                            guestsSnapshot.forEach(guestDoc => batch.delete(guestDoc.ref));
                         }
                     }
 
                     await batch.commit();
+                    logAction(`Removeu ${sessionStorage.getItem('userRole') === 'administrador' && sessionStorage.getItem('loggedInUserId') !== currentSlotData.playerId ? currentSlotData.playerName : 'sua própria presença'} da ${collectionName === 'presencas' ? 'lista de presença' : 'lista de espera'}.`);
                     
-                    const userPerformingAction = sessionStorage.getItem('loggedInUser');
-                    const userRole = sessionStorage.getItem('userRole');
-                    const playerRemoved = currentSlotData.playerName;
-                    const slotNumber = parseInt(currentSlotData.slot) + 1;
-                    const listType = currentSlotData.list === 'waiting' ? 'lista de espera' : 'lista de presença';
-
-                    if (userRole === 'administrador' && userPerformingAction !== playerRemoved) {
-                         logAction(`Removeu ${playerRemoved} da vaga #${slotNumber} da ${listType}.`);
-                    } else {
-                         logAction(`Removeu sua própria presença (${playerRemoved}) da vaga #${slotNumber} da ${listType}.`);
-                    }
-
-                    unconfirmModal.classList.remove('flex');
-                    adminActionModal.classList.remove('flex');
+                    [unconfirmModal, adminActionModal].forEach(m => m.classList.remove('flex'));
                     
-                    if (collectionName === 'presencas') {
-                        const configDoc = await getDoc(doc(db, "configuracoes", "global"));
-                        if (configDoc.exists() && configDoc.data().data_ativa) {
-                            const activeDate = configDoc.data().data_ativa;
-                            const waitingListQuery = query(collection(db, "lista_espera"), where("data_jogo", "==", activeDate));
-                            const waitingListSnapshot = await getDocs(waitingListQuery);
-                            if (!waitingListSnapshot.empty && sessionStorage.getItem('userRole') === 'administrador') {
-                                showMessage(
-                                    'Vaga Liberada!', 
-                                    `Uma ou mais vagas foram liberadas. Existem ${waitingListSnapshot.size} jogador(es) na lista de espera.`
-                                );
-                            }
-                        }
+                    if (collectionName === 'presencas' && sessionStorage.getItem('userRole') === 'administrador') {
+                         const waitingSnapshot = await getDocs(query(collection(db, "lista_espera"), where("data_jogo", "==", (await getDoc(doc(db, "configuracoes", "global"))).data().data_ativa)));
+                         if (!waitingSnapshot.empty) showMessage('Vaga Liberada!', `Existem ${waitingSnapshot.size} jogador(es) na lista de espera.`);
                     }
                     refreshUI();
                 } catch (error) {
                     showMessage("Erro", "Não foi possível remover a presença.");
-                    console.error("Erro ao remover presença:", error);
                 }
             }
 
             async function handlePenalty(days) {
                 if (selectedPlayerForAction.type === 'convidado') {
-                    showMessage('Aviso', 'A penalidade só pode ser aplicada a jogadores registados. Remova a presença se necessário.');
-                     penaltyModal.classList.remove('flex');
-                    return;
+                    penaltyModal.classList.remove('flex');
+                    return showMessage('Aviso', 'A penalidade só pode ser aplicada a jogadores registados.');
                 }
                 try {
-                    const today = new Date();
-                    today.setDate(today.getDate() + days);
-                    const penaltyEndDate = today.toISOString().split('T')[0];
-
-                    const userRef = doc(db, "jogadores", selectedPlayerForAction.id);
-                    await updateDoc(userRef, { penalidade_ate: penaltyEndDate });
-                    logAction(`Aplicou penalidade de ${days} dias a ${selectedPlayerForAction.name}.`);
+                    const penaltyEndDate = new Date();
+                    penaltyEndDate.setDate(penaltyEndDate.getDate() + days);
+                    await updateDoc(doc(db, "jogadores", selectedPlayerForAction.id), { penalidade_ate: penaltyEndDate.toISOString().split('T')[0] });
                     
+                    logAction(`Aplicou penalidade de ${days} dias a ${selectedPlayerForAction.name}.`);
                     await handleConfirmUnmark(); 
-
                     showMessage('Sucesso', `${selectedPlayerForAction.name} foi penalizado e removido da lista.`);
                     penaltyModal.classList.remove('flex');
                     renderUserList();
                 } catch (error) {
-                    console.error("Erro ao aplicar penalidade: ", error);
                     showMessage("Erro", "Não foi possível aplicar a penalidade.");
                 }
             }
 
-             // --- LÓGICA DA LISTA DE ESPERA ---
-            async function renderWaitingList(dateString, isPaused) {
+            // --- LÓGICA DA LISTA DE ESPERA ---
+            async function renderWaitingList(dateString) {
                 waitingSlots.innerHTML = '';
-                const loggedInUserId = sessionStorage.getItem('loggedInUserId');
-                const userRole = sessionStorage.getItem('userRole');
-
                 try {
                     const playersSnapshot = await getDocs(collection(db, "jogadores"));
                     const playersMap = new Map();
-                    playersSnapshot.forEach(doc => {
-                        playersMap.set(doc.id, doc.data().nome_exibicao);
-                    });
+                    playersSnapshot.forEach(d => playersMap.set(d.id, d.data().nome_exibicao));
 
-                    const q = query(collection(db, "lista_espera"), where("data_jogo", "==", dateString));
-                    const waitingSnapshot = await getDocs(q);
-                    
+                    const waitingSnapshot = await getDocs(query(collection(db, "lista_espera"), where("data_jogo", "==", dateString)));
                     const waitingList = {};
-                    waitingSnapshot.forEach(doc => {
-                        const data = doc.data();
-                        const playerName = playersMap.get(data.jogador_id);
-                        if (playerName) {
-                            waitingList[data.numero_vaga] = {
-                                playerName: playerName,
-                                playerId: data.jogador_id,
-                                docId: doc.id
-                            };
-                        }
+                    waitingSnapshot.forEach(d => {
+                        const data = d.data();
+                        if (playersMap.has(data.jogador_id)) waitingList[data.numero_vaga] = { playerName: playersMap.get(data.jogador_id), playerId: data.jogador_id, docId: d.id };
                     });
 
-                    if (userRole === 'administrador' && !isPaused) {
-                        waitingSlots.classList.add('admin-view');
-                    } else {
-                        waitingSlots.classList.remove('admin-view');
-                    }
+                    waitingSlots.classList.toggle('admin-view', sessionStorage.getItem('userRole') === 'administrador');
                     
                     for (let i = 0; i < WAITING_LIST_SLOTS; i++) {
                         const waitingData = waitingList[i];
@@ -1300,48 +1235,35 @@
                         slotEl.dataset.slot = i;
                         slotEl.className = 'slot p-3 rounded-lg text-center font-bold truncate';
 
-                        if (isPaused) {
-                            slotEl.classList.add('slot-paused');
-                            slotEl.textContent = waitingData ? waitingData.playerName : `Espera #${i + 1}`;
+                        if (waitingData) {
+                            slotEl.textContent = waitingData.playerName;
+                            slotEl.dataset.docId = waitingData.docId;
+                            slotEl.dataset.playerName = waitingData.playerName;
+                            slotEl.dataset.playerId = waitingData.playerId;
+                            slotEl.classList.add('slot-waiting');
+                            if (waitingData.playerId === sessionStorage.getItem('loggedInUserId')) slotEl.classList.add('slot-waiting-mine');
                         } else {
-                            if (waitingData) {
-                                slotEl.textContent = waitingData.playerName;
-                                slotEl.dataset.docId = waitingData.docId;
-                                slotEl.dataset.playerName = waitingData.playerName;
-                                slotEl.dataset.playerId = waitingData.playerId;
-                                slotEl.classList.add('slot-waiting');
-                                if (waitingData.playerId === loggedInUserId) {
-                                    slotEl.classList.add('slot-waiting-mine');
-                                }
-                            } else {
-                                slotEl.textContent = `Espera #${i + 1}`;
-                                slotEl.classList.add('slot-free');
-                            }
-                            slotEl.addEventListener('click', handleWaitingSlotClick);
+                            slotEl.textContent = `Espera #${i + 1}`;
+                            slotEl.classList.add('slot-free');
                         }
+                        slotEl.addEventListener('click', handleWaitingSlotClick);
                         waitingSlots.appendChild(slotEl);
                     }
                 } catch (error) {
                     console.error("Erro ao renderizar lista de espera:", error);
+                    waitingSlots.innerHTML = '<p class="col-span-full text-red-500">Falha ao carregar.</p>';
                 }
             }
 
             async function handleWaitingSlotClick(event) {
                 const target = event.target.closest('.slot');
                 if (!target) return;
-
                 const userRole = sessionStorage.getItem('userRole');
-                const loggedInUserId = sessionStorage.getItem('loggedInUserId');
-                const slot = target.dataset.slot;
-                const docId = target.dataset.docId;
-                const playerName = target.dataset.playerName;
-                const playerId = target.dataset.playerId;
-
-                currentSlotData = { slot, docId, playerName, playerId, list: 'waiting' };
+                currentSlotData = { slot: target.dataset.slot, docId: target.dataset.docId, playerName: target.dataset.playerName, playerId: target.dataset.playerId, list: 'waiting' };
                 
                 if (target.classList.contains('slot-free')) {
                     modalTitle.textContent = 'Entrar na Lista de Espera';
-                    modalConfirmText.textContent = `Deseja entrar na vaga de espera #${parseInt(slot) + 1}?`;
+                    modalConfirmText.textContent = `Deseja entrar na vaga de espera #${parseInt(currentSlotData.slot) + 1}?`;
                     confirmBtn.onclick = handleConfirmWaitingPresence;
                     presenceModal.classList.add('flex');
                 } else if (target.classList.contains('slot-waiting-mine')) {
@@ -1349,105 +1271,63 @@
                     confirmUnmarkBtn.onclick = handleConfirmUnmark;
                     unconfirmModal.classList.add('flex');
                 } else if (userRole === 'administrador') {
-                    const freeSlots = [];
-                    document.querySelectorAll('#presence-slots .slot-free').forEach(slotNode => {
-                        freeSlots.push(slotNode.dataset.slot);
-                    });
-
-                    if (freeSlots.length === 0) {
-                        showMessage('Sem Vagas', 'Não há vagas livres na lista de presença para mover este jogador.');
-                        return;
-                    }
-
-                    playerToMove = { name: playerName, id: playerId, waitingDocId: docId };
-                    movePlayerText.textContent = `Mover ${playerName} para a lista de presença.`;
+                    const freeSlots = Array.from(document.querySelectorAll('#presence-slots .slot-free')).map(s => s.dataset.slot);
+                    if (freeSlots.length === 0) return showMessage('Sem Vagas', 'Não há vagas livres na lista de presença para mover este jogador.');
+                    
+                    playerToMove = { name: currentSlotData.playerName, id: currentSlotData.playerId, waitingDocId: currentSlotData.docId };
+                    movePlayerText.textContent = `Mover ${playerToMove.name} para a lista de presença.`;
                     freeSlotsSelect.innerHTML = freeSlots.map(s => `<option value="${s}">Vaga #${parseInt(s) + 1}</option>`).join('');
                     movePlayerModal.classList.add('flex');
                 }
             }
 
             async function handleConfirmWaitingPresence() {
-                const loggedInUserId = sessionStorage.getItem('loggedInUserId');
-                
                 presenceModal.classList.remove('flex');
-                confirmBtn.onclick = null;
-
+                const loggedInUserId = sessionStorage.getItem('loggedInUserId');
                 try {
                     const configDoc = await getDoc(doc(db, "configuracoes", "global"));
-                    if (!configDoc.exists() || !configDoc.data().data_ativa) {
-                        showMessage('Erro', 'Nenhuma data ativa para marcação.');
-                        return;
-                    }
+                    if (!configDoc.exists() || !configDoc.data().data_ativa) return showMessage('Erro', 'Nenhuma data ativa para marcação.');
+                    
                     const activeDate = configDoc.data().data_ativa;
-
-                    const presencasRef = collection(db, "presencas");
                     const waitingListRef = collection(db, "lista_espera");
+                    const presencasRef = collection(db, "presencas");
 
-                    const qUserPresence = query(presencasRef, where("data_jogo", "==", activeDate), where("jogador_id", "==", loggedInUserId));
-                    const qUserWaiting = query(waitingListRef, where("data_jogo", "==", activeDate), where("jogador_id", "==", loggedInUserId));
-                    const qSlotWaiting = query(waitingListRef, where("data_jogo", "==", activeDate), where("numero_vaga", "==", parseInt(currentSlotData.slot)));
-
-                    const [userPresenceSnapshot, userWaitingSnapshot, slotWaitingSnapshot] = await Promise.all([
-                        getDocs(qUserPresence),
-                        getDocs(qUserWaiting),
-                        getDocs(qSlotWaiting)
+                    const [userPresenceSnap, userWaitingSnap, slotWaitingSnap] = await Promise.all([
+                        getDocs(query(presencasRef, where("data_jogo", "==", activeDate), where("jogador_id", "==", loggedInUserId))),
+                        getDocs(query(waitingListRef, where("data_jogo", "==", activeDate), where("jogador_id", "==", loggedInUserId))),
+                        getDocs(query(waitingListRef, where("data_jogo", "==", activeDate), where("numero_vaga", "==", parseInt(currentSlotData.slot))))
                     ]);
 
-                    if (!userPresenceSnapshot.empty || !userWaitingSnapshot.empty) {
-                        showMessage('Aviso', 'Você já está na lista de presença ou de espera.');
-                        refreshUI();
-                        return;
+                    if (!userPresenceSnap.empty || !userWaitingSnap.empty) return showMessage('Aviso', 'Você já está na lista de presença ou de espera.');
+                    if (!slotWaitingSnap.empty) {
+                        showMessage('Vaga Ocupada', 'Esta vaga na lista de espera foi ocupada.');
+                        return refreshUI();
                     }
 
-                    if (!slotWaitingSnapshot.empty) {
-                        showMessage('Vaga Ocupada', 'Esta vaga na lista de espera foi ocupada. A lista será atualizada.');
-                        refreshUI();
-                        return;
-                    }
-
-                    await addDoc(waitingListRef, {
-                        data_jogo: activeDate,
-                        jogador_id: loggedInUserId,
-                        numero_vaga: parseInt(currentSlotData.slot)
-                    });
-                    
+                    await addDoc(waitingListRef, { data_jogo: activeDate, jogador_id: loggedInUserId, numero_vaga: parseInt(currentSlotData.slot) });
                     logAction(`Entrou na lista de espera (vaga #${parseInt(currentSlotData.slot) + 1}).`);
                     refreshUI();
-
                 } catch (error) {
-                    console.error("Erro ao entrar na lista de espera:", error);
                     showMessage('Erro', 'Não foi possível entrar na lista de espera.');
-                    refreshUI();
                 }
             }
 
             async function handleConfirmMovePlayer() {
                 if (!playerToMove) return;
-                const targetSlot = freeSlotsSelect.value;
-
                 try {
                     const configDoc = await getDoc(doc(db, "configuracoes", "global"));
                     const activeDate = configDoc.data().data_ativa;
 
                     const batch = writeBatch(db);
-                    const waitingRef = doc(db, "lista_espera", playerToMove.waitingDocId);
-                    batch.delete(waitingRef);
-                    const presenceRef = doc(collection(db, "presencas"));
-                    batch.set(presenceRef, {
-                        data_jogo: activeDate,
-                        jogador_id: playerToMove.id,
-                        numero_vaga: parseInt(targetSlot),
-                        tipo: 'jogador'
-                    });
+                    batch.delete(doc(db, "lista_espera", playerToMove.waitingDocId));
+                    batch.set(doc(collection(db, "presencas")), { data_jogo: activeDate, jogador_id: playerToMove.id, numero_vaga: parseInt(freeSlotsSelect.value), tipo: 'jogador', observacao: 'Movido da lista de espera.' });
                     await batch.commit();
 
-                    logAction(`Moveu ${playerToMove.name} da lista de espera para a vaga #${parseInt(targetSlot) + 1}.`);
+                    logAction(`Moveu ${playerToMove.name} da lista de espera para a vaga #${parseInt(freeSlotsSelect.value) + 1}.`);
                     showMessage('Sucesso', `${playerToMove.name} foi movido para a lista de presença.`);
                     movePlayerModal.classList.remove('flex');
-                    playerToMove = null;
                     refreshUI();
                 } catch(error) {
-                    console.error("Erro ao mover jogador:", error);
                     showMessage('Erro', 'Não foi possível mover o jogador.');
                 }
             }
@@ -1456,13 +1336,12 @@
                 try {
                     const configRef = doc(db, "configuracoes", "global");
                     const configDoc = await getDoc(configRef);
-                    const currentStatus = configDoc.exists() ? configDoc.data().lista_espera_ativa : false;
+                    const currentStatus = configDoc.data()?.lista_espera_ativa || false;
                     await setDoc(configRef, { lista_espera_ativa: !currentStatus }, { merge: true });
-                    logAction(!currentStatus ? 'Ativou a lista de espera.' : 'Desativou a lista de espera.');
+                    logAction(`${!currentStatus ? 'Ativou' : 'Desativou'} a lista de espera.`);
                     showMessage('Sucesso', `Lista de espera ${!currentStatus ? 'ativada' : 'desativada'}.`);
                     refreshUI();
                 } catch (error) {
-                    console.error("Erro ao alternar a lista de espera:", error);
                     showMessage("Erro", "Não foi possível alterar o estado da lista de espera.");
                 }
             }
@@ -1470,262 +1349,164 @@
             // --- LÓGICA DE RELATÓRIO ---
             async function handleGenerateReport(e) {
                 e.preventDefault();
-                const startDate = reportDateForm['start-date'].value;
-                const endDate = reportDateForm['end-date'].value;
+                const startDate = reportDateForm['start-date'].value, endDate = reportDateForm['end-date'].value;
+                if (!startDate || !endDate || startDate > endDate) return showMessage('Erro', 'Selecione um intervalo de datas válido.');
 
-                if (!startDate || !endDate || startDate > endDate) {
-                    showMessage('Erro de Validação', 'Por favor, selecione um intervalo de datas válido.');
-                    return;
-                }
-
-                reportContent.textContent = 'A gerar relatório...';
                 reportDateModal.classList.remove('flex');
                 reportDisplayModal.classList.add('flex');
+                reportContent.textContent = 'A gerar relatório...';
 
                 try {
-                    const playersSnapshot = await getDocs(collection(db, "jogadores"));
-                    const playersMap = new Map();
-                    const presenceCounts = {};
-                    playersSnapshot.forEach(doc => {
-                        const playerData = doc.data();
-                        playersMap.set(doc.id, playerData.nome_exibicao);
-                        presenceCounts[playerData.nome_exibicao] = 0;
+                    const playersSnap = await getDocs(collection(db, "jogadores"));
+                    const playersMap = new Map(), presenceCounts = {};
+                    playersSnap.forEach(d => {
+                        playersMap.set(d.id, d.data().nome_exibicao);
+                        presenceCounts[d.data().nome_exibicao] = 0;
                     });
-
                     const guestCounts = {};
-
-                    const q = query(collection(db, "presencas"), where("data_jogo", ">=", startDate), where("data_jogo", "<=", endDate));
-                    const presenceSnapshot = await getDocs(q);
-
-                    presenceSnapshot.forEach(doc => {
-                        const data = doc.data();
+                    const presenceSnap = await getDocs(query(collection(db, "presencas"), where("data_jogo", ">=", startDate), where("data_jogo", "<=", endDate)));
+                    presenceSnap.forEach(d => {
+                        const data = d.data();
                         if (data.tipo === 'jogador') {
                             const playerName = playersMap.get(data.jogador_id);
                             if (playerName) presenceCounts[playerName]++;
                         } else if (data.tipo === 'convidado') {
                             const hostName = playersMap.get(data.jogador_id);
-                            const guestKey = `${data.nome_convidado} (convidado por ${hostName || 'Desconhecido'})`;
+                            const guestKey = `${data.nome_convidado} (convidado por ${hostName || '?'})`;
                             guestCounts[guestKey] = (guestCounts[guestKey] || 0) + 1;
                         }
                     });
 
                     const sortedPlayers = Object.entries(presenceCounts).sort(([,a],[,b]) => b-a);
                     const sortedGuests = Object.entries(guestCounts).sort(([,a],[,b]) => b-a);
-
-                    const formattedStartDate = new Date(startDate + 'T00:00:00').toLocaleDateString('pt-BR');
-                    const formattedEndDate = new Date(endDate + 'T00:00:00').toLocaleDateString('pt-BR');
+                    const formattedStart = new Date(startDate + 'T00:00:00').toLocaleDateString('pt-BR');
+                    const formattedEnd = new Date(endDate + 'T00:00:00').toLocaleDateString('pt-BR');
                     
-                    let reportString = `Relatório de Presença - ${formattedStartDate} a ${formattedEndDate}\n`;
-                    reportString += '============================================\n\n';
-                    reportString += '--- JOGADORES ---\n';
-                    sortedPlayers.forEach(([name, count]) => {
-                        reportString += `${name}: ${count} presença(s)\n`;
-                    });
-
+                    let reportString = `Relatório de Presença - ${formattedStart} a ${formattedEnd}\n============================================\n\n--- JOGADORES ---\n`;
+                    sortedPlayers.forEach(([name, count]) => reportString += `${name}: ${count} presença(s)\n`);
                     if (sortedGuests.length > 0) {
                         reportString += '\n--- CONVIDADOS ---\n';
-                        sortedGuests.forEach(([name, count]) => {
-                            reportString += `${name}: ${count} presença(s)\n`;
-                        });
+                        sortedGuests.forEach(([name, count]) => reportString += `${name}: ${count} presença(s)\n`);
                     }
-
                     reportContent.textContent = reportString;
-
                 } catch (error) {
-                    console.error("Erro ao gerar relatório: ", error);
                     reportContent.textContent = 'Ocorreu um erro ao gerar o relatório.';
                 }
             }
 
             function handleDownloadReport() {
-                const text = reportContent.textContent;
-                const startDate = reportDateForm['start-date'].value;
-                const endDate = reportDateForm['end-date'].value;
-                const filename = `relatorio_presenca_${startDate}_a_${endDate}.txt`;
-
-                const blob = new Blob([text], { type: 'text/plain' });
+                const blob = new Blob([reportContent.textContent], { type: 'text/plain' });
                 const anchor = document.createElement('a');
-                
                 anchor.href = URL.createObjectURL(blob);
-                anchor.download = filename;
-                
-                document.body.appendChild(anchor);
+                anchor.download = `relatorio_presenca.txt`;
                 anchor.click();
-                document.body.removeChild(anchor);
-
                 URL.revokeObjectURL(anchor.href);
             }
 
-            // --- LÓGICA DE NAVEGAÇÃO E AUTENTICAÇÃO ---
+            // --- AUTENTICAÇÃO E NAVEGAÇÃO ---
             function handleTabClick(event) {
                 tabs.forEach(tab => tab.classList.remove('active'));
                 event.currentTarget.classList.add('active');
                 const tabId = event.currentTarget.dataset.tab;
-
-                if (tabId === 'log') {
-                    renderLogs(); // Carrega os logs quando a aba é clicada
-                }
-
-                tabContents.forEach(content => {
-                    content.id === tabId ? content.classList.remove('hidden') : content.classList.add('hidden');
-                });
+                if (tabId === 'log') renderLogs();
+                tabContents.forEach(content => content.classList.toggle('hidden', content.id !== tabId));
             }
             
-            async function handleLogin(event) {
-                event.preventDefault();
+            async function handleLogin(e) {
+                e.preventDefault();
                 const loginErrorEl = document.getElementById('login-error');
                 loginErrorEl.classList.add('hidden');
                 
-                const usernameInput = loginForm.username.value;
+                const username = loginForm.username.value.toLowerCase().replace(/\s+/g, '');
                 const password = loginForm.password.value;
-                const normalizedUsername = usernameInput.toLowerCase().replace(/\s+/g, '');
                 
                 try {
-                    const q = query(collection(db, "jogadores"), where("nome_usuario", "==", normalizedUsername));
-                    const querySnapshot = await getDocs(q);
-
-                    if (querySnapshot.empty) {
-                        loginErrorEl.textContent = 'Utilizador ou senha inválidos.';
-                        loginErrorEl.classList.remove('hidden');
-                        return;
-                    }
+                    const qSnapshot = await getDocs(query(collection(db, "jogadores"), where("nome_usuario", "==", username)));
+                    if (qSnapshot.empty) throw new Error('Utilizador ou senha inválidos.');
                     
-                    const userDoc = querySnapshot.docs[0];
+                    const userDoc = qSnapshot.docs[0];
                     const userData = userDoc.data();
 
-                    if (userData.bloqueado_inatividade) {
-                        loginErrorEl.textContent = 'Login bloqueado por inatividade.';
-                        loginErrorEl.classList.remove('hidden');
-                        return;
-                    }
-                    
-                    if (userData.senha !== password) {
-                        loginErrorEl.textContent = 'Utilizador ou senha inválidos.';
-                        loginErrorEl.classList.remove('hidden');
-                        return;
-                    }
+                    if (userData.bloqueado_inatividade) throw new Error('Login bloqueado por inatividade.');
+                    if (userData.senha !== password) throw new Error('Utilizador ou senha inválidos.');
                     
                     if (userData.penalidade_ate) {
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0);
-                        const penaltyDate = new Date(userData.penalidade_ate + 'T00:00:00');
-                        if (today <= penaltyDate) {
-                            const formattedDate = penaltyDate.toLocaleDateString('pt-BR');
-                            loginErrorEl.textContent = `Está penalizado até ${formattedDate}.`;
-                            loginErrorEl.classList.remove('hidden');
-                            return;
-                        }
+                        const today = new Date(); today.setHours(0,0,0,0);
+                        if (today <= new Date(userData.penalidade_ate + 'T00:00:00')) throw new Error(`Está penalizado até ${new Date(userData.penalidade_ate + 'T00:00:00').toLocaleDateString('pt-BR')}.`);
                     }
                     
-                    if (userData.perfil === 'padrão' && userData.ultimo_login) {
-                        const lastLoginDate = new Date(userData.ultimo_login);
-                        const today = new Date();
-                        const diffDays = Math.floor((today - lastLoginDate) / (1000 * 60 * 60 * 24));
-                        
-                        if (diffDays > 14) {
-                            await updateDoc(doc(db, "jogadores", userDoc.id), { bloqueado_inatividade: true });
-                            loginErrorEl.textContent = 'Login bloqueado por inatividade.';
-                            loginErrorEl.classList.remove('hidden');
-                            return;
-                        }
+                    if (userData.perfil === 'padrão' && userData.ultimo_login && (new Date() - new Date(userData.ultimo_login)) / (1000*60*60*24) > 14) {
+                        await updateDoc(userDoc.ref, { bloqueado_inatividade: true });
+                        throw new Error('Login bloqueado por inatividade.');
                     }
 
-                    await updateDoc(doc(db, "jogadores", userDoc.id), { 
-                        ultimo_login: new Date().toISOString().split('T')[0]
-                    });
-
+                    await updateDoc(userDoc.ref, { ultimo_login: new Date().toISOString().split('T')[0] });
                     sessionStorage.setItem('loggedInUserId', userDoc.id);
                     sessionStorage.setItem('loggedInUser', userData.nome_exibicao);
                     sessionStorage.setItem('userRole', userData.perfil);
                     
                     showApp(userData.nome_exibicao, userData.perfil);
                     refreshUI();
-
                 } catch (error) {
-                    console.error("ERRO CRÍTICO DURANTE O LOGIN:", error);
-                    loginErrorEl.textContent = 'Erro de conexão. Tente novamente.';
+                    loginErrorEl.textContent = error.message || 'Erro de conexão. Tente novamente.';
                     loginErrorEl.classList.remove('hidden');
                 }
             }
 
-
             function handleLogout() {
                 sessionStorage.clear();
-                loginScreen.classList.remove('hidden');
                 appScreen.classList.add('hidden');
-                adminTabButton.classList.add('hidden');
+                loginScreen.classList.remove('hidden');
                 document.getElementById('log-tab-button').classList.add('hidden');
+                adminTabButton.classList.add('hidden');
                 loginForm.reset();
-                document.querySelector('.tab-button[data-tab="presenca"]').click();
             }
             
-            async function handleRegistration(event) {
-                event.preventDefault();
-                const registrationMessage = document.getElementById('registration-message');
+            async function handleRegistration(e) {
+                e.preventDefault();
+                const msgEl = document.getElementById('registration-message');
                 const newUsername = registrationForm['new-username'].value;
-                const newPassword = registrationForm['new-password'].value;
-                const role = registrationForm['user-role'].value;
+                let photoUrl = registrationForm['new-photo-url'].value.trim();
 
-                if (!newUsername || !newPassword) {
-                    registrationMessage.textContent = "Preencha todos os campos.";
-                    registrationMessage.className = "text-center text-lg text-red-500";
-                    return;
-                }
-
-                const normalizedUsername = newUsername.toLowerCase().replace(/\s+/g, '');
+                if (!photoUrl) photoUrl = `https://placehold.co/400x400/FBBF24/001f3f?text=${newUsername.charAt(0)}`;
                 
                 try {
-                    const q = query(collection(db, "jogadores"), where("nome_usuario", "==", normalizedUsername));
-                    const querySnapshot = await getDocs(q);
+                    const normalized = newUsername.toLowerCase().replace(/\s+/g, '');
+                    const qSnapshot = await getDocs(query(collection(db, "jogadores"), where("nome_usuario", "==", normalized)));
+                    if (!qSnapshot.empty) throw new Error("Este jogador já existe.");
 
-                    if (!querySnapshot.empty) {
-                        registrationMessage.textContent = "Este jogador já existe.";
-                        registrationMessage.className = "text-center text-lg text-red-500";
-                    } else {
-                        await addDoc(collection(db, "jogadores"), {
-                            nome_exibicao: newUsername,
-                            nome_usuario: normalizedUsername,
-                            senha: newPassword,
-                            perfil: role,
-                            penalidade_ate: null,
-                            ultimo_login: new Date().toISOString().split('T')[0],
-                            bloqueado_inatividade: false
-                        });
-                        logAction(`Cadastrou o novo jogador: ${newUsername} (Perfil: ${role}).`);
-                        registrationMessage.textContent = "Jogador cadastrado!";
-                        registrationMessage.className = "text-center text-lg text-green-500";
-                        registrationForm.reset();
-                        setTimeout(() => registrationMessage.textContent = '', 3000);
-                        renderUserList();
-                    }
+                    await addDoc(collection(db, "jogadores"), {
+                        nome_exibicao: newUsername,
+                        nome_usuario: normalized,
+                        senha: registrationForm['new-password'].value,
+                        perfil: registrationForm['user-role'].value,
+                        photo_url: photoUrl,
+                        ultimo_login: new Date().toISOString().split('T')[0],
+                    });
+
+                    logAction(`Cadastrou o novo jogador: ${newUsername}.`);
+                    msgEl.textContent = "Jogador cadastrado!";
+                    msgEl.className = "text-center text-lg text-green-500";
+                    registrationForm.reset();
+                    renderUserList();
                 } catch (error) {
-                    console.error("Erro no registo: ", error);
-                    registrationMessage.textContent = "Erro ao cadastrar. Tente novamente.";
-                    registrationMessage.className = "text-center text-lg text-red-500";
+                    msgEl.textContent = error.message || "Erro ao cadastrar.";
+                    msgEl.className = "text-center text-lg text-red-500";
                 }
             }
             
             function showApp(username, role) {
                 welcomeMessage.textContent = `Bem-vindo(a), ${username}!`;
-                const logTabButton = document.getElementById('log-tab-button');
-                if (role === 'administrador') {
-                    adminTabButton.classList.remove('hidden');
-                    logTabButton.classList.remove('hidden');
-                } else {
-                    adminTabButton.classList.add('hidden');
-                    logTabButton.classList.add('hidden');
-                }
+                adminTabButton.classList.toggle('hidden', role !== 'administrador');
+                document.getElementById('log-tab-button').classList.toggle('hidden', role !== 'administrador');
                 loginScreen.classList.add('hidden');
                 appScreen.classList.remove('hidden');
-                loginForm.reset();
             }
 
-            // --- INICIALIZAÇÃO E EVENT LISTENERS ---
+            // --- INICIALIZAÇÃO ---
             function main() {
-                const loggedInUser = sessionStorage.getItem('loggedInUser');
-                const userRole = sessionStorage.getItem('userRole');
-                if(loggedInUser && userRole) {
-                    showApp(loggedInUser, userRole);
+                if(sessionStorage.getItem('loggedInUser')) {
+                    showApp(sessionStorage.getItem('loggedInUser'), sessionStorage.getItem('userRole'));
                     refreshUI();
                 }
                 
@@ -1736,169 +1517,96 @@
                 editUserForm.addEventListener('submit', handleSaveUserChanges);
                 confirmDeleteUserBtn.addEventListener('click', handleConfirmDeleteUser);
                 messageOkButton.addEventListener('click', () => messageModal.classList.remove('flex'));
-                
                 set18SlotsButton.addEventListener('click', () => setTotalSlots(18));
                 set24SlotsButton.addEventListener('click', () => setTotalSlots(24));
-                
-                changePasswordButton.addEventListener('click', () => {
-                    changePasswordForm.reset();
-                    changePasswordModal.classList.add('flex');
-                });
+                changePasswordButton.addEventListener('click', () => changePasswordModal.classList.add('flex'));
                 cancelChangePasswordButton.addEventListener('click', () => changePasswordModal.classList.remove('flex'));
                 changePasswordForm.addEventListener('submit', handleChangePassword);
-                
                 addGuestButton.addEventListener('click', () => guestModal.classList.add('flex'));
                 cancelGuestButton.addEventListener('click', () => guestModal.classList.remove('flex'));
                 guestForm.addEventListener('submit', handleGuestSubmit);
-
-                cancelBtn.addEventListener('click', () => {
-                    presenceModal.classList.remove('flex');
-                    confirmBtn.onclick = null;
-                });
-                
+                cancelBtn.addEventListener('click', () => presenceModal.classList.remove('flex'));
                 cancelUnmarkBtn.addEventListener('click', () => unconfirmModal.classList.remove('flex'));
                 confirmUnmarkBtn.addEventListener('click', handleConfirmUnmark);
-                
                 adminActionCancelBtn.addEventListener('click', () => adminActionModal.classList.remove('flex'));
-                adminActionRemoveBtn.addEventListener('click', () => {
-                    adminActionModal.classList.remove('flex');
-                    handleConfirmUnmark();
+                adminActionViewPhotoButton.addEventListener('click', () => {
+                    if (currentSlotData && currentSlotData.photoUrl) {
+                        adminActionModal.classList.remove('flex');
+                        playerPhotoImg.src = currentSlotData.photoUrl;
+                        playerPhotoName.textContent = currentSlotData.playerName;
+                        photoModalUnconfirmBtn.classList.add('hidden'); // Admin shouldn't unconfirm from here
+                        playerPhotoModal.classList.add('flex');
+                    }
                 });
-                adminActionPenaltyBtn.addEventListener('click', () => {
-                    adminActionModal.classList.remove('flex');
-                     if(currentSlotData.list === 'waiting' || selectedPlayerForAction.type === 'convidado') {
-                         showMessage('Aviso', 'Ação não permitida para este jogador.');
-                         return;
-                     }
-                    penaltyText.textContent = `Escolha a duração da penalidade para ${selectedPlayerForAction.name}.`;
-                    penaltyModal.classList.add('flex');
-                });
+                adminActionRemoveBtn.addEventListener('click', () => { adminActionModal.classList.remove('flex'); handleConfirmUnmark(); });
+                adminActionPenaltyBtn.addEventListener('click', () => { adminActionModal.classList.remove('flex'); penaltyText.textContent = `Aplicar penalidade para ${selectedPlayerForAction.name}.`; penaltyModal.classList.add('flex'); });
                 penaltyCancelBtn.addEventListener('click', () => penaltyModal.classList.remove('flex'));
-                document.querySelectorAll('.penalty-duration-button').forEach(button => {
-                    button.addEventListener('click', (e) => handlePenalty(parseInt(e.target.dataset.penalty)));
-                });
-                
+                document.querySelectorAll('.penalty-duration-button').forEach(b => b.addEventListener('click', (e) => handlePenalty(parseInt(e.target.dataset.penalty))));
                 toggleWaitingListButton.addEventListener('click', handleToggleWaitingList);
                 cancelMovePlayerButton.addEventListener('click', () => movePlayerModal.classList.remove('flex'));
                 confirmMovePlayerButton.addEventListener('click', handleConfirmMovePlayer);
-
                 userList.addEventListener('click', (e) => {
-                    const target = e.target;
-                    if (target.classList.contains('edit-user-btn')) {
-                        userToEditId = target.dataset.userid;
-                        editUserTitle.textContent = `Editar ${target.dataset.username}`;
-                        editUserForm['edit-user-role'].value = target.dataset.userrole;
-                        editUserForm['edit-password'].value = '';
+                    if (e.target.matches('.edit-user-btn')) {
+                        userToEditId = e.target.dataset.userid;
+                        editUserTitle.textContent = `Editar ${e.target.dataset.username}`;
+                        editUserForm['edit-user-role'].value = e.target.dataset.userrole;
+                        editUserForm['edit-photo-url'].value = e.target.dataset.photourl || '';
                         editUserModal.classList.add('flex');
-                    }
-                    if (target.classList.contains('delete-user-btn')) {
-                        userToDeleteId = target.dataset.userid;
-                        userToDeleteName = target.dataset.username;
-                        deleteUserText.textContent = `Tem a certeza de que quer excluir ${target.dataset.username}? Esta ação não pode ser desfeita.`;
+                    } else if (e.target.matches('.delete-user-btn')) {
+                        userToDeleteId = e.target.dataset.userid;
+                        userToDeleteName = e.target.dataset.username;
+                        deleteUserText.textContent = `Tem a certeza de que quer excluir ${userToDeleteName}?`;
                         deleteUserModal.classList.add('flex');
-                    }
-                    if (target.classList.contains('remove-penalty-btn')) {
-                        handleRemovePenalty(target.dataset.userid, target.dataset.username);
-                    }
-                    if (target.classList.contains('unblock-user-btn')) {
-                        handleUnblockUser(target.dataset.userid, target.dataset.username);
+                    } else if (e.target.matches('.remove-penalty-btn')) {
+                        handleRemovePenalty(e.target.dataset.userid, e.target.dataset.username);
+                    } else if (e.target.matches('.unblock-user-btn')) {
+                        handleUnblockUser(e.target.dataset.userid, e.target.dataset.username);
                     }
                 });
                 cancelEditUserBtn.addEventListener('click', () => editUserModal.classList.remove('flex'));
                 cancelDeleteUserBtn.addEventListener('click', () => deleteUserModal.classList.remove('flex'));
+                observationForm.addEventListener('submit', (e) => { e.preventDefault(); handleSavePresenceWithObservation(observationText.value.trim()); });
+                skipObservationButton.addEventListener('click', () => handleSavePresenceWithObservation(''));
+                viewObservationOkButton.addEventListener('click', () => viewObservationModal.classList.remove('flex'));
+                closePlayerPhotoButton.addEventListener('click', () => playerPhotoModal.classList.remove('flex'));
 
-                presenceDateInput.addEventListener('change', async (e) => {
-                    const newDate = e.target.value;
-                    try {
-                        await setDoc(doc(db, "configuracoes", "global"), { data_ativa: newDate, marcacoes_pausadas: false }, { merge: true });
-                        logAction(`Alterou a data ativa para ${new Date(newDate + 'T00:00:00').toLocaleDateString('pt-BR')}.`);
-                        refreshUI();
-                    } catch (error) { console.error("Erro ao definir data ativa: ", error); }
+                photoModalUnconfirmBtn.addEventListener('click', () => {
+                    playerPhotoModal.classList.remove('flex');
+                    unconfirmModalText.textContent = `Tem a certeza de que deseja remover a presença de ${currentSlotData.playerName}?`;
+                    unconfirmModal.classList.add('flex');
                 });
                 
-                pauseDateButton.addEventListener('click', async () => {
-                    try {
-                        const configRef = doc(db, "configuracoes", "global");
-                        const configDoc = await getDoc(configRef);
-                        const currentStatus = configDoc.exists() ? configDoc.data().marcacoes_pausadas : false;
-                        await setDoc(configRef, { marcacoes_pausadas: !currentStatus }, { merge: true });
-                        logAction(!currentStatus ? 'Pausou as marcações.' : 'Retomou as marcações.');
-                        refreshUI();
-                    } catch (error) { console.error("Erro ao pausar/retomar marcações: ", error); }
-                });
-
-                deletePresencesButton.addEventListener('click', async () => {
-                    try {
-                        const configDoc = await getDoc(doc(db, "configuracoes", "global"));
-                        if (!configDoc.exists() || !configDoc.data().data_ativa) {
-                            showMessage('Aviso', 'Nenhuma data ativa selecionada.');
-                            return;
-                        }
-                        const activeDate = configDoc.data().data_ativa;
-                        const dateObj = new Date(activeDate + 'T00:00:00');
-                        const formattedDate = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' });
-                        deletePresencesText.textContent = `Tem a certeza de que quer apagar TODAS as presenças do dia ${formattedDate}?`;
-                        deletePresencesModal.classList.add('flex');
-                    } catch(error) { console.error("Erro ao preparar exclusão de presenças: ", error); }
-                });
-                
+                presenceDateInput.addEventListener('change', async (e) => { try { await setDoc(doc(db, "configuracoes", "global"), { data_ativa: e.target.value, marcacoes_pausadas: false }, { merge: true }); logAction(`Alterou a data ativa.`); refreshUI(); } catch (error) { console.error(error); }});
+                pauseDateButton.addEventListener('click', async () => { try { const configRef = doc(db, "configuracoes", "global"); const currentStatus = (await getDoc(configRef)).data()?.marcacoes_pausadas || false; await setDoc(configRef, { marcacoes_pausadas: !currentStatus }, { merge: true }); logAction(`${!currentStatus ? 'Pausou' : 'Retomou'} as marcações.`); refreshUI(); } catch (error) { console.error(error); }});
+                deletePresencesButton.addEventListener('click', async () => { const activeDate = (await getDoc(doc(db, "configuracoes", "global"))).data()?.data_ativa; if (!activeDate) return showMessage('Aviso', 'Nenhuma data ativa selecionada.'); deletePresencesText.textContent = `Apagar TODAS as presenças do dia ${new Date(activeDate + 'T00:00:00').toLocaleDateString('pt-BR')}?`; deletePresencesModal.classList.add('flex'); });
                 cancelDeletePresencesBtn.addEventListener('click', () => deletePresencesModal.classList.remove('flex'));
-                
                 confirmDeletePresencesBtn.addEventListener('click', async () => {
                     try {
-                        const configDocRef = doc(db, "configuracoes", "global");
-                        const configDoc = await getDoc(configDocRef);
-                        const activeDate = configDoc.data().data_ativa;
-                        if (!activeDate) {
-                            deletePresencesModal.classList.remove('flex');
-                            return;
-                        }
-
-                        const qPresences = query(collection(db, "presencas"), where("data_jogo", "==", activeDate));
-                        const qWaiting = query(collection(db, "lista_espera"), where("data_jogo", "==", activeDate));
-                        const [presencesSnapshot, waitingSnapshot] = await Promise.all([getDocs(qPresences), getDocs(qWaiting)]);
-                        
+                        const activeDate = (await getDoc(doc(db, "configuracoes", "global"))).data()?.data_ativa;
+                        if (!activeDate) return;
+                        const [presencesSnap, waitingSnap] = await Promise.all([ getDocs(query(collection(db, "presencas"), where("data_jogo", "==", activeDate))), getDocs(query(collection(db, "lista_espera"), where("data_jogo", "==", activeDate))) ]);
                         const batch = writeBatch(db);
-                        presencesSnapshot.docs.forEach(d => batch.delete(d.ref));
-                        waitingSnapshot.docs.forEach(d => batch.delete(d.ref));
+                        presencesSnap.forEach(d => batch.delete(d.ref));
+                        waitingSnap.forEach(d => batch.delete(d.ref));
                         await batch.commit();
-
-                        logAction(`Excluiu todas as presenças e a lista de espera do dia ${activeDate}.`);
-                        await setDoc(configDocRef, { data_ativa: null }, { merge: true });
-                        showMessage('Sucesso', 'Presenças e lista de espera removidas. Data desativada.');
+                        await setDoc(doc(db, "configuracoes", "global"), { data_ativa: null }, { merge: true });
+                        logAction(`Excluiu todas as presenças do dia ${activeDate}.`);
+                        showMessage('Sucesso', 'Presenças removidas e data desativada.');
                         deletePresencesModal.classList.remove('flex');
                         refreshUI();
-                    } catch(error) {
-                        console.error("Erro ao excluir presenças em lote: ", error);
-                        showMessage("Erro", "Não foi possível excluir as presenças.");
-                    }
+                    } catch(error) { showMessage("Erro", "Não foi possível excluir as presenças."); }
                 });
-
-                // Listeners de Relatório
                 generateReportButton.addEventListener('click', () => reportDateModal.classList.add('flex'));
                 cancelReportDateButton.addEventListener('click', () => reportDateModal.classList.remove('flex'));
                 reportDateForm.addEventListener('submit', handleGenerateReport);
                 downloadReportButton.addEventListener('click', handleDownloadReport);
                 closeReportDisplayButton.addEventListener('click', () => reportDisplayModal.classList.remove('flex'));
-
-                // NOVO: Listeners para Zoom de Imagem
-                albumContainer.addEventListener('click', (e) => {
-                    // Garante que o clique foi em uma imagem dentro do álbum
-                    if (e.target.tagName === 'IMG' && e.target.closest('#album')) {
-                        zoomedImage.src = e.target.src;
-                        imageZoomModal.classList.add('flex');
-                    }
-                });
-
-                imageZoomModal.addEventListener('click', () => {
-                    imageZoomModal.classList.remove('flex');
-                });
+                albumContainer.addEventListener('click', (e) => { if (e.target.tagName === 'IMG' && e.target.closest('#album')) { zoomedImage.src = e.target.src; imageZoomModal.classList.add('flex'); } });
+                imageZoomModal.addEventListener('click', () => imageZoomModal.classList.remove('flex'));
             }
-            
             main();
         });
     </script>
 </body>
 </html>
-
 
